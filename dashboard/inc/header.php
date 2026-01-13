@@ -133,7 +133,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             .sidebar .close-sidebar {
                 display: block;
             }
-
         }
     </style>
 </head>
@@ -165,8 +164,17 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'products.php') echo 'active'; ?>" href="products.php">
                 <i class="bi bi-box-seam me-2"></i> Products
             </a>
+            <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'categories.php') echo 'active'; ?>" href="categories.php">
+                <i class="bi bi-card-text me-2"></i> Category
+            </a>
+            <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'brands.php') echo 'active'; ?>" href="brands.php">
+                <i class="bi bi-card-text me-2"></i> Brand
+            </a>
             <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'blog.php') echo 'active'; ?>" href="blog.php">
                 <i class="bi bi-journal-text me-2"></i> Blog
+            </a>
+            <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'users.php') echo 'active'; ?>" href="users.php">
+                <i class="bi bi-person-circle me-2"></i> Users
             </a>
             <a class="nav-link text-warning" href="../logout.php">
                 <i class="bi bi-box-arrow-right me-2"></i> Logout

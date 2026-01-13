@@ -2,46 +2,47 @@
 require 'inc/header.php';
 require '../inc/db.php';
 
-// Admin guard
+// Only admin can access
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit;
 }
 
-// Pagination
-$limit = 5;
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+// pagination settings
+$limit = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? $_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
-// Total records
-$totalResult = $conn->query("SELECT COUNT(*) AS total FROM posts");
+// total records
+$totalResult = $conn->query("SELECT COUNT(*) AS total FROM categories WHERE status = 1");
 $totalRow = $totalResult->fetch_assoc();
 $totalRecords = $totalRow['total'];
 $totalPages = ceil($totalRecords / $limit);
+$totalPages = ceil($totalRecords / $limit);
 
-// Fetch posts with author
-$sql = "SELECT p.*, u.username 
-        FROM posts p
-        LEFT JOIN users u ON p.user_id = u.id
-        ORDER BY p.id DESC
+// Fetch categories with pagination
+$sql = "SELECT * 
+        FROM categories
+        WHERE status = 1
+        ORDER BY id DESC
         LIMIT $limit OFFSET $offset";
+
 $result = $conn->query($sql);
 ?>
 
-<div class="px-2 mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Blog Posts</h2>
-        <a class="btn btn-success" href="blog_add.php">Add New Post</a>
+<div class="px-3 mt-4">
+    <div class="d-flex align-items-center mb-3">
+        <h2 class="me-auto">Category</h2>
+        <a class="btn btn-success" href="categories_add.php">Add Category</a>
     </div>
 
     <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-dark">
                 <tr>
-                    <th width="60">ID</th>
-                    <th>Title</th>
-                    <th width="150">Author</th>
-                    <th width="180">Created At</th>
+                    <th width="80">ID</th>
+                    <th>Name</th>
+                    <th width=120">Status</th>
                     <th width="180">Action</th>
                 </tr>
             </thead>
@@ -50,22 +51,23 @@ $result = $conn->query($sql);
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <tr>
                             <td><?= $row['id'] ?></td>
-                            <td><?= htmlspecialchars($row['title']) ?></td>
-                            <td><?= htmlspecialchars($row['username'] ?? 'Unknown') ?></td>
-                            <td><?= date('Y-m-d H:i', strtotime($row['created_at'])) ?></td>
+                            <td><?= htmlspecialchars($row['name']) ?></td>
                             <td>
-                                <a class="btn btn-primary btn-sm" href="blog_edit.php?id=<?= $row['id'] ?>">Edit</a>
-                                <a class="btn btn-danger btn-sm"
-                                    href="blog_delete.php?id=<?= $row['id'] ?>"
-                                    onclick="return confirm('Are you sure you want to delete this post?')">
-                                    Delete
-                                </a>
+                                <?php if ($row['status'] == 1): ?>
+                                    <span class="badge bg-success">Active</span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary">Inactive</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <a class="btn btn-primary btn-sm" href="categories_edit.php?id=<?= $row['id'] ?>">Edit</a>
+                                <a class="btn btn-danger btn-sm" href="categories_delete.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure you want to delete this product?')">Delete</a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" class="text-center">No blog posts found.</td>
+                        <td colspan="8" class="text-center">No categories found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -74,27 +76,28 @@ $result = $conn->query($sql);
 
     <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
+
         <nav>
-            <ul class="pagination justify-content-center mt-3">
+            <ul class="pagination justify-content-center">
 
                 <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+                    <a class="page-link" href="?page=<?= $page - 1  ?>"> Previous</a>
                 </li>
 
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                        <a class="page-link" href="?page=<? $i ?>"><?= $i ?></a>
                     </li>
                 <?php endfor; ?>
 
                 <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
                     <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
                 </li>
-
             </ul>
         </nav>
-    <?php endif; ?>
-</div>
 
+    <?php endif; ?>
+
+</div>
 
 <?php include 'inc/footer.php'; ?>

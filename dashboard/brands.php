@@ -3,35 +3,32 @@ require 'inc/header.php';
 require '../inc/db.php';
 
 // Admin guard
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
     header("Location: ../login.php");
     exit;
 }
 
 // Pagination
 $limit = 5;
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
 // Total records
-$totalResult = $conn->query("SELECT COUNT(*) AS total FROM posts");
-$totalRow = $totalResult->fetch_assoc();
-$totalRecords = $totalRow['total'];
+$totalResult = $conn->query("SELECT COUNT(*) AS total FROM brands");
+$totalRecords = $totalResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRecords / $limit);
 
-// Fetch posts with author
-$sql = "SELECT p.*, u.username 
-        FROM posts p
-        LEFT JOIN users u ON p.user_id = u.id
-        ORDER BY p.id DESC
-        LIMIT $limit OFFSET $offset";
+// Fetch brands
+$sql = "SELECT * FROM brands ORDER BY id DESC LIMIT $limit OFFSET $offset";
 $result = $conn->query($sql);
+
 ?>
 
 <div class="px-2 mt-4 mb-5">
+
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Blog Posts</h2>
-        <a class="btn btn-success" href="blog_add.php">Add New Post</a>
+        <h3 class="me-auto">Brands</h3>
+        <a href="brand_add.php" class="btn btn-success ms-auto">Add Brand</a>
     </div>
 
     <div class="table-responsive">
@@ -39,33 +36,30 @@ $result = $conn->query($sql);
             <thead class="table-dark">
                 <tr>
                     <th width="60">ID</th>
-                    <th>Title</th>
-                    <th width="150">Author</th>
-                    <th width="180">Created At</th>
+                    <th>Name</th>
+                    <th width="120">Status</th>
                     <th width="180">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if ($result->num_rows > 0): ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php while ($b = $result->fetch_assoc()): ?>
                         <tr>
-                            <td><?= $row['id'] ?></td>
-                            <td><?= htmlspecialchars($row['title']) ?></td>
-                            <td><?= htmlspecialchars($row['username'] ?? 'Unknown') ?></td>
-                            <td><?= date('Y-m-d H:i', strtotime($row['created_at'])) ?></td>
+                            <td><?= $b['id'] ?></td>
+                            <td><?= htmlspecialchars($b['name']) ?></td>
                             <td>
-                                <a class="btn btn-primary btn-sm" href="blog_edit.php?id=<?= $row['id'] ?>">Edit</a>
-                                <a class="btn btn-danger btn-sm"
-                                    href="blog_delete.php?id=<?= $row['id'] ?>"
-                                    onclick="return confirm('Are you sure you want to delete this post?')">
-                                    Delete
-                                </a>
+                                <?= $b['status'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
+                            </td>
+                            <td>
+                                <a href="brand_edit.php?id=<?= $b['id'] ?>" class="btn btn-primary btn-sm">Edit</a>
+                                <a href="brand_delete.php?id=<?= $b['id'] ?>" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure?')">Delete</a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" class="text-center">No blog posts found.</td>
+                        <td colspan="4" class="text-center">No brands found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -95,6 +89,5 @@ $result = $conn->query($sql);
         </nav>
     <?php endif; ?>
 </div>
-
 
 <?php include 'inc/footer.php'; ?>

@@ -1,9 +1,8 @@
 <?php
+require 'inc/header.php';
 require '../inc/db.php';
-session_start();
 
-// Admin guard
-if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit;
 }
@@ -15,23 +14,21 @@ if (isset($_POST['submit'])) {
     $status = isset($_POST['status']) ? 1 : 0;
 
     if ($name) {
-        $stmt = $conn->prepare("INSERT INTO brands(name,status) VALUES(?,?)");
+        $stmt = $conn->prepare("INSERT INTO categories(name,status) VALUES(?,?)");
         $stmt->bind_param("si", $name, $status);
         $stmt->execute();
         $stmt->close();
 
-        header("Location: brands.php"); // must be before any HTML output
+        header("Location: categories.php");
         exit;
     } else {
-        $message = "Brand name is required!";
+        $message = "Category name is required!";
     }
 }
-
-require 'inc/header.php'; // move AFTER logic
 ?>
 
 <div class="container mt-4">
-    <h3>Add Brand</h3>
+    <h3>Add Category</h3>
 
     <?php if ($message): ?>
         <div class="alert alert-danger"><?= $message ?></div>
@@ -39,14 +36,16 @@ require 'inc/header.php'; // move AFTER logic
 
     <form method="POST">
         <div class="mb-3">
-            <label class="form-label">Brand Name</label>
+            <label class="form-label">Category Name</label>
             <input type="text" class="form-control" name="name" required>
         </div>
+
         <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" name="status" checked>
             <label class="form-check-label">Active</label>
         </div>
+
         <button class="btn btn-success" name="submit">Save</button>
-        <a href="brands.php" class="btn btn-secondary">Back</a>
+        <a href="categories.php" class="btn btn-secondary">Back</a>
     </form>
 </div>
