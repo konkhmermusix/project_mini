@@ -173,6 +173,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'blog.php') echo 'active'; ?>" href="blog.php">
                 <i class="bi bi-journal-text me-2"></i> Blog
             </a>
+            <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'slideshows.php') echo 'active'; ?>" href="slideshows.php">
+                <i class="bi bi-journal-text me-2"></i> Slide Show
+            </a>
             <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'users.php') echo 'active'; ?>" href="users.php">
                 <i class="bi bi-person-circle me-2"></i> Users
             </a>

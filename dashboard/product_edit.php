@@ -142,34 +142,33 @@ require 'inc/header.php';
             <form method="POST" enctype="multipart/form-data">
 
                 <div class="form-outline mb-3">
-                    <input type="text" name="name" placeholder=" " value="<?= htmlspecialchars($product['name']) ?>" required>
+                    <input class="form-control" type="text" name="name" placeholder=" " value="<?= htmlspecialchars($product['name']) ?>" required>
                     <label>Product Name</label>
                 </div>
 
                 <div class="form-outline mb-3">
-                    <textarea name="description" rows="4" placeholder=" "><?= htmlspecialchars($product['description']) ?></textarea>
+                    <textarea class="form-control" name="description" rows="4" placeholder=" "><?= htmlspecialchars($product['description']) ?></textarea>
                     <label>Description</label>
                 </div>
 
                 <div class="row">
                     <div class="col-md-4 mb-3 form-outline">
-                        <input type="number" name="price" step="0.01" placeholder=" " value="<?= $product['price'] ?>" required>
+                        <input class="form-control" type="number" name="price" step="0.01" placeholder=" " value="<?= $product['price'] ?>" required>
                         <label>Price ($)</label>
                     </div>
                     <div class="col-md-4 mb-3 form-outline">
-                        <input type="number" name="cost_price" step="0.01" placeholder=" " value="<?= $product['cost_price'] ?>">
+                        <input class="form-control" type="number" name="cost_price" step="0.01" placeholder=" " value="<?= $product['cost_price'] ?>">
                         <label>Cost Price ($)</label>
                     </div>
                     <div class="col-md-4 mb-3 form-outline">
-                        <input type="number" name="qty" placeholder=" " value="<?= $product['qty'] ?>" required>
+                        <input class="form-control" type="number" name="qty" placeholder=" " value="<?= $product['qty'] ?>" required>
                         <label>Stock Qty</label>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-4 mb-3 form-outline">
-                        <select name="brand_id" required>
-                            <option value="">Select Brand</option>
+                        <select class="form-select" name="brand_id" required>
                             <?php $brands->data_seek(0);
                             while ($b = $brands->fetch_assoc()): ?>
                                 <option value="<?= $b['id'] ?>" <?= $product['brand_id'] == $b['id'] ? 'selected' : '' ?>><?= htmlspecialchars($b['name']) ?></option>
@@ -178,8 +177,7 @@ require 'inc/header.php';
                         <label>Brand</label>
                     </div>
                     <div class="col-md-4 mb-3 form-outline">
-                        <select name="category_id" required>
-                            <option value="">Select Category</option>
+                        <select class="form-select" name="category_id" required>
                             <?php $categories->data_seek(0);
                             while ($c = $categories->fetch_assoc()): ?>
                                 <option value="<?= $c['id'] ?>" <?= $product['category_id'] == $c['id'] ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option>
@@ -188,7 +186,7 @@ require 'inc/header.php';
                         <label>Category</label>
                     </div>
                     <div class="col-md-4 mb-3 form-outline">
-                        <input type="number" name="discount" step="0.01" placeholder=" " value="<?= $product['discount_percent'] ?>">
+                        <input class="form-control" type="number" name="discount" step="0.01" placeholder=" " value="<?= $product['discount_percent'] ?>">
                         <label>Discount (%)</label>
                     </div>
                 </div>
@@ -203,7 +201,7 @@ require 'inc/header.php';
                 </div>
 
                 <div class="mb-3">
-                    <input type="file" name="image" accept="image/*" class="form-control" onchange="previewImage(event)">
+                    <input class="form-control" type="file" name="image" accept="image/*" class="form-control" onchange="previewImage(event)">
                     <?php if ($product['image']): ?>
                         <img id="preview" src="../<?= htmlspecialchars($product['image']) ?>" class="img-fluid" alt="Preview">
                     <?php else: ?>

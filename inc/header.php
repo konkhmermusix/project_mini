@@ -73,6 +73,54 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
             font-weight: bold;
             font-size: 1rem;
         }
+
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            text-align: center;
+            font-size: 18px;
+            background: #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .swiper-slide img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .swiper {
+            width: 100%;
+            height: 400px;
+            margin: 30px auto;
+            border-radius: 10px;
+        }
+
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: #fff;
+        }
+
+        .slide1 {
+            background: #1abc9c;
+        }
+
+        .slide2 {
+            background: #3498db;
+        }
+
+        .slide3 {
+            background: #9b59b6;
+        }
     </style>
 </head>
 

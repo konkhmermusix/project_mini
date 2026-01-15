@@ -5,37 +5,22 @@ include 'inc/header.php';
 
 <div class="container-fluit">
     <!-- Swiper -->
-    <div class="swiper slidshow">
+    <div class="swiper mySwiper">
         <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <img src="https://placehold.co/600x400@3x.png" alt="Slide 1" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+2" alt="Slide 2" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+3" alt="Slide 3" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+4" alt="Slide 4" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+5" alt="Slide 5" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+6" alt="Slide 6" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+7" alt="Slide 7" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+8" alt="Slide 8" class="img-fluid">
-            </div>
-            <div class="swiper-slide">
-                <img src="https://via.placeholder.com/600x400?text=Slide+9" alt="Slide 9" class="img-fluid">
-            </div>
+            <div class="swiper-slide slide1">Slide 1</div>
+            <div class="swiper-slide slide2">Slide 2</div>
+            <div class="swiper-slide slide3">Slide 3</div>
         </div>
+
+        <!-- Navigation -->
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+
+        <!-- Pagination -->
         <div class="swiper-pagination"></div>
+
+        <!-- Scrollbar -->
+        <div class="swiper-scrollbar"></div>
     </div>
 
     <h2 class="mb-4">Products</h2>
@@ -131,6 +116,27 @@ include 'inc/header.php';
             renderBullet: function(index, className) {
                 return '<span class="' + className + '">' + (index + 1) + "</span>";
             },
+        },
+    });
+</script>
+
+<script>
+    var swiper = new Swiper(".mySwiper", {
+        loop: true,
+        autoplay: {
+            delay: 3000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+        scrollbar: {
+            el: ".swiper-scrollbar",
         },
     });
 </script>

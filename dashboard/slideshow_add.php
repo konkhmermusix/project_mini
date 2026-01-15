@@ -1,5 +1,4 @@
 <?php
-
 require '../inc/db.php';
 session_start();
 
@@ -9,38 +8,53 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 $message = '';
-$brands = $conn->query("SELECT id,name FROM brands WHERE status=1 ORDER BY name");
-$categories = $conn->query("SELECT id,name FROM categories WHERE status=1 ORDER BY name");
 
 if (isset($_POST['submit'])) {
-    $name = trim($_POST['name']);
+
+    $title       = trim($_POST['title']);
     $description = trim($_POST['description']);
-    $price = floatval($_POST['price']);
-    $cost_price = floatval($_POST['cost_price']);
-    $qty = intval($_POST['qty']);
-    $brand_id = intval($_POST['brand_id']);
-    $category_id = intval($_POST['category_id']);
-    $featured = isset($_POST['featured']) ? 1 : 0;
-    $trending = isset($_POST['trending']) ? 1 : 0;
-    $discount = floatval($_POST['discount']);
+    $link        = trim($_POST['link']);
+    $position    = intval($_POST['position']);
+    $status      = isset($_POST['status']) ? 1 : 0;
 
     $image = '';
+
+    // Upload Image
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed)) $message = "<div class='alert alert-danger alert-right'>Invalid image type!</div>";
-        else {
-            $image = 'uploads/' . time() . '_' . basename($_FILES['image']['name']);
+
+        if (!in_array($ext, $allowed)) {
+            $message = "<div class='alert alert-danger alert-right'>Invalid image type!</div>";
+        } else {
+            $image = 'uploads/slideshow_' . time() . '_' . basename($_FILES['image']['name']);
             move_uploaded_file($_FILES['image']['tmp_name'], '../' . $image);
         }
+    } else {
+        $message = "<div class='alert alert-danger alert-right'>Image is required!</div>";
     }
 
+    // Insert to DB
     if (empty($message)) {
-        $stmt = $conn->prepare("INSERT INTO products (name, description, price, cost_price, qty, brand_id, category_id, featured, trending, discount_percent, image) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssddiiiiids", $name, $description, $price, $cost_price, $qty, $brand_id, $category_id, $featured, $trending, $discount, $image);
+        $stmt = $conn->prepare(
+            "INSERT INTO slideshow (title, description, image, link, position, status)
+             VALUES (?,?,?,?,?,?)"
+        );
+
+        $stmt->bind_param(
+            "ssssii",
+            $title,
+            $description,
+            $image,
+            $link,
+            $position,
+            $status
+        );
+
         $stmt->execute();
         $stmt->close();
-        header("Location: products.php");
+
+        header("Location: slideshows.php");
         exit;
     }
 }
@@ -101,6 +115,7 @@ require 'inc/header.php';
     }
 </style>
 
+
 <?php if (!empty($message)) echo $message; ?>
 
 <div class="container mt-4">
@@ -134,6 +149,7 @@ require 'inc/header.php';
                     <label>Position</label>
                 </div>
 
+
                 <div class="mb-3">
                     <input class="form-control" type="file" name="image" accept="image/*" class="form-control" onchange="previewImage(event)">
                     <img id="preview" src="#" alt="Image Preview" class="img-fluid">
@@ -146,6 +162,7 @@ require 'inc/header.php';
 
                 <button class="btn btn-success" name="submit">Save</button>
             </form>
+
         </div>
     </div>
 </div>
