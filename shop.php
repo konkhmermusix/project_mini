@@ -56,46 +56,55 @@ include 'inc/header.php';
             </div>
         </div>
         <div class="col-md-10 mb-4 px-3">
-            <?php
-            $result = $conn->query("SELECT * FROM products WHERE status = 1");
-            while ($row = $result->fetch_assoc()):
-            ?>
+            <div class="row g-3">
 
-                <div class="card  shadow-sm">
-                    <?php if (!empty($row['image'])): ?>
-                        <img src="<?= htmlspecialchars($row['image']) ?>"
-                            class="card-img-top"
-                            style="height:200px; object-fit:cover;">
-                    <?php endif; ?>
+                <?php
+                $result = $conn->query("SELECT * FROM products WHERE status = 1");
+                while ($row = $result->fetch_assoc()):
+                ?>
 
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
-                        <p class="card-text small text-muted">
-                            <?= substr(strip_tags($row['description']), 0, 80) ?>...
-                        </p>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card shadow-sm h-100">
 
-                        <p class="fw-bold mb-2">$<?= number_format($row['price'], 2) ?></p>
+                            <?php if (!empty($row['image'])): ?>
+                                <img src="<?= htmlspecialchars($row['image']) ?>"
+                                    class="card-img-top"
+                                    style="height:200px; object-fit:cover;">
+                            <?php endif; ?>
 
-                        <div class="mt-auto d-flex gap-2">
-                            <!-- View -->
-                            <a href="product_detail.php?id=<?= $row['id'] ?>"
-                                class="btn btn-outline-primary w-50">
-                                View
-                            </a>
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
 
-                            <!-- Add to Cart -->
-                            <form action="cart_add.php" method="post" class="w-50">
-                                <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
-                                <input type="hidden" name="qty" value="1">
-                                <button class="btn btn-success w-100">
-                                    Add to Cart
-                                </button>
-                            </form>
+                                <p class="card-text small text-muted">
+                                    <?= substr(strip_tags($row['description']), 0, 60) ?>...
+                                </p>
+
+                                <p class="fw-bold mb-2 text-primary">
+                                    $<?= number_format($row['price'], 2) ?>
+                                </p>
+
+                                <div class="mt-auto d-flex gap-2">
+                                    <a href="product_detail.php?id=<?= $row['id'] ?>"
+                                        class="btn btn-outline-primary btn-sm w-50">
+                                        View
+                                    </a>
+
+                                    <form action="cart_add.php" method="post" class="w-50">
+                                        <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
+                                        <input type="hidden" name="qty" value="1">
+                                        <button class="btn btn-success btn-sm w-100">
+                                            Add
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                </div>
 
-            <?php endwhile; ?>
+                <?php endwhile; ?>
+
+            </div>
         </div>
     </div>
 </section>

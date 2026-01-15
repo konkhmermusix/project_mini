@@ -154,16 +154,6 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                             Shop
                         </a>
                     </li>
-                    <li class="nav-item me-3 dropdown">
-                        <a class="nav-link dropdown-toggle <?php if (basename($_SERVER['PHP_SELF']) == '') echo 'active'; ?>"
-                            href="#" data-bs-toggle="dropdown">Shop</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="shop.php?category=electronics">Electronics</a></li>
-                            <li><a class="dropdown-item" href="shop.php?category=clothing">Clothing</a></li>
-                            <li><a class="dropdown-item" href="shop.php?category=accessories">Accessories</a></li>
-                            <li><a class="dropdown-item" href="shop.php?category=shoes">Shoes</a></li>
-                        </ul>
-                    </li>
 
                     <li class="nav-item me-3">
                         <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'blog.php') echo 'active'; ?>" href="blog.php">Blog</a>
@@ -186,15 +176,14 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
 
                     <!-- Cart -->
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-primary btn-nav position-relative" href="cart.php">
+                        <a class="btn btn-outline-primary btn-nav position-relative" href="cart.php" id="cartLink">
                             <i class="bi bi-cart"></i> Cart
-                            <?php if ($cartCount > 0): ?>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    <?= $cartCount ?>
-                                </span>
-                            <?php endif; ?>
+                            <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                <?= $cartCount ?? 0 ?>
+                            </span>
                         </a>
                     </li>
+
 
                     <!-- Account / avatar -->
                     <?php if (isset($_SESSION['user_id'])): ?>

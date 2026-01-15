@@ -77,6 +77,31 @@
 <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 
 
+<script>
+    document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+
+        fetch('cart_add_ajax.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update navbar badge
+                    document.getElementById('cartCountBadge').textContent = data.cartCount;
+                } else if (data.login) {
+                    // Redirect to login if not logged in
+                    window.location.href = 'login.php';
+                }
+            })
+            .catch(err => console.error(err));
+    });
+</script>
+
+
 </body>
 
 </html>

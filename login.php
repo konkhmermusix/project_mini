@@ -1,40 +1,109 @@
 <?php
+
 session_start();
 require 'inc/db.php';
 
 $message = '';
 
 if (isset($_POST['login'])) {
+
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM users WHERE email='$email' LIMIT 1";
-    $result = $conn->query($sql);
+    // =========================
+    // Fetch user securely
+    // =========================
+    $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE email=? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 
-    if ($result && $result->num_rows === 1) {
-        $user = $result->fetch_assoc();
+    if ($user && password_verify($password, $user['password'])) {
 
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
+        // =========================
+        // Set session
+        // =========================
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
 
-            header("Location: index.php");
+        // =========================
+        // Merge cookie cart into session cart
+        // =========================
+        if (isset($_COOKIE['cart'])) {
+            $cookieCart = json_decode($_COOKIE['cart'], true);
+            if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
+
+            foreach ($cookieCart as $pid => $item) {
+                if (isset($_SESSION['cart'][$pid])) {
+                    $_SESSION['cart'][$pid]['qty'] += $item['qty'];
+                } else {
+                    $_SESSION['cart'][$pid] = $item;
+                }
+            }
+            // Update cookie
+            setcookie('cart', json_encode($_SESSION['cart']), time() + (7 * 24 * 60 * 60), "/");
+        }
+
+        // =========================
+        // Redirect to previous product or homepage
+        // =========================
+        if (isset($_SESSION['redirect_product'])) {
+            $pid = $_SESSION['redirect_product'];
+            unset($_SESSION['redirect_product']);
+            header("Location: product_detail.php?id=" . $pid);
             exit;
         } else {
-            $message = "
-            <div class='alert alert-warning alert-dismissible fade show  alert-right' role='alert'>
-                <strong>Wrong password.</strong>
-                <button type='button' class='btn-close shadow-none' data-bs-dismiss='alert' aria-label='Close'></button>
-            </div>";
+            header("Location: index.php");
+            exit;
         }
     } else {
         $message = "
-        <div class='alert alert-success alert-dismissible fade show  alert-right' role='alert'>
-            <strong>Login successful!</strong>
+        <div class='alert alert-warning alert-dismissible fade show alert-right' role='alert'>
+            <strong>Invalid email or password.</strong>
             <button type='button' class='btn-close shadow-none' data-bs-dismiss='alert' aria-label='Close'></button>
         </div>";
     }
 }
+
+
+// session_start();
+// require 'inc/db.php';
+
+// $message = '';
+
+// if (isset($_POST['login'])) {
+//     $email = trim($_POST['email']);
+//     $password = $_POST['password'];
+
+//     $sql = "SELECT * FROM users WHERE email='$email' LIMIT 1";
+//     $result = $conn->query($sql);
+
+//     if ($result && $result->num_rows === 1) {
+//         $user = $result->fetch_assoc();
+
+//         if (password_verify($password, $user['password'])) {
+//             $_SESSION['user_id'] = $user['id'];
+//             $_SESSION['role'] = $user['role'];
+
+//             header("Location: index.php");
+//             exit;
+//         } else {
+//             $message = "
+//             <div class='alert alert-warning alert-dismissible fade show  alert-right' role='alert'>
+//                 <strong>Wrong password.</strong>
+//                 <button type='button' class='btn-close shadow-none' data-bs-dismiss='alert' aria-label='Close'></button>
+//             </div>";
+//         }
+//     } else {
+//         $message = "
+//         <div class='alert alert-success alert-dismissible fade show  alert-right' role='alert'>
+//             <strong>Login successful!</strong>
+//             <button type='button' class='btn-close shadow-none' data-bs-dismiss='alert' aria-label='Close'></button>
+//         </div>";
+//     }
+// }
 ?>
 <!DOCTYPE html>
 <html lang="en">

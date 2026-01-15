@@ -1,5 +1,63 @@
 <?php
 require 'inc/db.php';
+
+session_start();
+
+/* =========================
+   Get Product ID
+========================= */
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+// POST: Add to Cart
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+
+    if (!isset($_SESSION['user_id'])) {
+        // អ្នកមិន login → redirect ទៅ login page
+        header("Location: login.php");
+        exit;
+    }
+
+    $product_id = intval($_POST['product_id']);
+    $qty        = intval($_POST['qty']);
+    if ($qty < 1) $qty = 1;
+
+    // Fetch product
+    $stmt = $conn->prepare("SELECT id, name, price, qty, image FROM products WHERE id=? AND status=1");
+    $stmt->bind_param("i", $product_id);
+    $stmt->execute();
+    $product = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$product) {
+        die("Product not found");
+    }
+
+    if ($qty > $product['qty']) $qty = $product['qty'];
+
+    // Init cart
+    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
+
+    // Add/update cart
+    if (isset($_SESSION['cart'][$product_id])) {
+        $newQty = $_SESSION['cart'][$product_id]['qty'] + $qty;
+        if ($newQty > $product['qty']) $newQty = $product['qty'];
+        $_SESSION['cart'][$product_id]['qty'] = $newQty;
+    } else {
+        $_SESSION['cart'][$product_id] = [
+            'id' => $product['id'],
+            'name' => $product['name'],
+            'price' => $product['price'],
+            'qty' => $qty,
+            'image' => $product['image']
+        ];
+    }
+
+    $_SESSION['cart_success'] = "Product added to cart!";
+    header("Location: index.php?id=" . $product_id);
+    exit;
+}
+
+
 include 'inc/header.php';
 ?>
 
@@ -129,13 +187,12 @@ include 'inc/header.php';
                             </a>
 
                             <!-- Add to Cart -->
-                            <form action="cart_add.php" method="post" class="w-50">
+                            <form method="post" class="w-50">
                                 <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                 <input type="hidden" name="qty" value="1">
-                                <button class="btn btn-success w-100">
-                                    Add to Cart
-                                </button>
+                                <button name="add_to_cart" class="btn btn-success">Add to Cart</button>
                             </form>
+
                         </div>
                     </div>
 
