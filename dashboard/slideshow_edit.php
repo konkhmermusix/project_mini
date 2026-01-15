@@ -33,50 +33,79 @@ if (isset($_POST['submit'])) {
 
     $image = $slide['image']; // keep old image
 
-    // If upload new image
+    // // If upload new image
+    // if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+    //     $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+    //     $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+
+    //     if (!in_array($ext, $allowed)) {
+    //         $message = "<div class='alert alert-danger alert-right'>Invalid image type!</div>";
+    //     } else {
+    //         $newImage = 'uploads/slideshow_' . time() . '_' . basename($_FILES['image']['name']);
+    //         move_uploaded_file($_FILES['image']['tmp_name'], '../' . $newImage);
+
+    //         // delete old image (optional)
+    //         if (file_exists('../' . $slide['image'])) {
+    //             unlink('../' . $slide['image']);
+    //         }
+
+    //         $image = $newImage;
+    //     }
+    // }
+
+    $image = $slide['image']; // Keep old image by default
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-
         if (!in_array($ext, $allowed)) {
             $message = "<div class='alert alert-danger alert-right'>Invalid image type!</div>";
         } else {
-            $newImage = 'uploads/slideshow_' . time() . '_' . basename($_FILES['image']['name']);
-            move_uploaded_file($_FILES['image']['tmp_name'], '../' . $newImage);
-
-            // delete old image (optional)
-            if (file_exists('../' . $slide['image'])) {
-                unlink('../' . $slide['image']);
-            }
-
-            $image = $newImage;
+            $image = 'uploads/' . time() . '_' . basename($_FILES['image']['name']);
+            move_uploaded_file($_FILES['image']['tmp_name'], '../' . $image);
         }
     }
 
     if (empty($message)) {
         $stmt = $conn->prepare(
             "UPDATE slideshow 
-             SET title=?, description=?, image=?, link=?, position=?, status=? 
-             WHERE id=?"
+            SET title=?, description=?, image=?, link=?, position=?, status=?  WHERE id=?"
         );
-
-        $stmt->bind_param(
-            "ssssiii",
-            $title,
-            $description,
-            $image,
-            $link,
-            $position,
-            $status,
-            $id
-        );
-
-        $stmt->execute();
+        $stmt->bind_param("ssssiii", $title, $description, $image, $link, $position, $status, $id);
+        if ($stmt->execute()) {
+            $message = "<div class='alert alert-success alert-right'>Product updated successfully!</div>";
+        } else {
+            $message = "<div class='alert alert-danger alert-right'>Error: " . $stmt->error . "</div>";
+        }
         $stmt->close();
 
         header("Location: slideshows.php");
         exit;
     }
+
+    // if (empty($message)) {
+    //     $stmt = $conn->prepare(
+    //         "UPDATE slideshow 
+    //          SET title=?, description=?, image=?, link=?, position=?, status=? 
+    //          WHERE id=?"
+    //     );
+
+    //     $stmt->bind_param(
+    //         "ssssiii",
+    //         $title,
+    //         $description,
+    //         $image,
+    //         $link,
+    //         $position,
+    //         $status,
+    //         $id
+    //     );
+
+    //     $stmt->execute();
+    //     $stmt->close();
+
+    //     header("Location: slideshows.php");
+    //     exit;
+    // }
 }
 
 require('inc/header.php');

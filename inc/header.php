@@ -149,8 +149,13 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                             Products
                         </a>
                     </li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'shop.php') echo 'active'; ?>" href="shop.php">
+                            Shop
+                        </a>
+                    </li>
                     <li class="nav-item me-3 dropdown">
-                        <a class="nav-link dropdown-toggle <?php if (basename($_SERVER['PHP_SELF']) == 'shop.php') echo 'active'; ?>"
+                        <a class="nav-link dropdown-toggle <?php if (basename($_SERVER['PHP_SELF']) == '') echo 'active'; ?>"
                             href="#" data-bs-toggle="dropdown">Shop</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="shop.php?category=electronics">Electronics</a></li>

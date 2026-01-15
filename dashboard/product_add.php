@@ -106,8 +106,8 @@ require 'inc/header.php';
 <div class="container mt-4">
     <div class="card shadow-sm mb-3">
         <div class="card-body p-4 d-flex align-items-center">
-            <h3 class="mb-0">Add Slide</h3>
-            <a href="slideshows.php" class="btn btn-secondary ms-auto">&larr; Back</a>
+            <h3 class="mb-0">Add Product</h3>
+            <a href="products.php" class="btn btn-secondary ms-auto">&larr; Back</a>
         </div>
     </div>
     <div class="card shadow-sm mb-4">
@@ -115,23 +115,63 @@ require 'inc/header.php';
             <form method="POST" enctype="multipart/form-data">
 
                 <div class="form-outline mb-3">
-                    <input type="text" name="title" class="form-control" placeholder=" " required>
-                    <label>Title</label>
+                    <input class="form-control" type="text" name="name" placeholder=" " required>
+                    <label>Product Name</label>
                 </div>
 
                 <div class="form-outline mb-3">
-                    <textarea name="description" class="form-control"></textarea>
+                    <textarea class="form-control" name="description" rows="4" placeholder=" "></textarea>
                     <label>Description</label>
                 </div>
 
-                <div class="form-outline mb-3">
-                    <input type="text" name="link" class="form-control">
-                    <label>Link</label>
+                <div class="row">
+                    <div class="col-md-4 mb-3 form-outline">
+                        <input class="form-control" type="number" name="price" step="0.01" placeholder=" " required>
+                        <label>Price ($)</label>
+                    </div>
+                    <div class="col-md-4 mb-3 form-outline">
+                        <input class="form-control" type="number" name="cost_price" step="0.01" placeholder=" ">
+                        <label>Cost Price ($)</label>
+                    </div>
+                    <div class="col-md-4 mb-3 form-outline">
+                        <input class="form-control" type="number" name="qty" placeholder=" " required>
+                        <label>Stock Qty</label>
+                    </div>
                 </div>
 
-                <div class="form-outline mb-3">
-                    <input type="number" name="position" class="form-control" value="0">
-                    <label>Position</label>
+                <div class="row">
+                    <div class="col-md-4 mb-3 form-outline">
+                        <select class="form-select" name="brand_id" required>
+                            <?php $brands->data_seek(0);
+                            while ($b = $brands->fetch_assoc()): ?>
+                                <option value="<?= $b['id'] ?>" <?= $product['brand_id'] == $b['id'] ? : '' ?>></option>
+                            <?php endwhile; ?>
+                        </select>
+                        <label>Brand</label>
+                    </div>
+                    <div class="col-md-4 mb-3 form-outline">
+                        <select class="form-select" name="category_id" required>
+                            <?php $categories->data_seek(0);
+                            while ($c = $categories->fetch_assoc()): ?>
+                                <option value="<?= $c['id'] ?>" <?= $product['category_id'] == $c['id'] ? : '' ?>></option>
+                            <?php endwhile; ?>
+                        </select>
+                        <label>Category</label>
+                    </div>
+
+                    <div class="col-md-4 mb-3 form-outline">
+                        <input class="form-control" type="number" name="discount" step="0.01" placeholder=" ">
+                        <label>Discount (%)</label>
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="featured" class="form-check-input" id="featured">
+                    <label class="form-check-label" for="featured">Featured</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="trending" class="form-check-input" id="trending">
+                    <label class="form-check-label" for="trending">Trending</label>
                 </div>
 
                 <div class="mb-3">
