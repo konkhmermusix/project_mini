@@ -140,30 +140,46 @@ require 'inc/header.php';
                 </div>
 
                 <div class="row">
+
+                    <!-- Brand -->
                     <div class="col-md-4 mb-3 form-outline">
                         <select class="form-select" name="brand_id" required>
-                            <?php $brands->data_seek(0);
+                            <option value="">Select Brand</option>
+                            <?php
+                            $brands->data_seek(0); // Reset pointer
                             while ($b = $brands->fetch_assoc()): ?>
-                                <option value="<?= $b['id'] ?>" <?= $product['brand_id'] == $b['id'] ? : '' ?>></option>
+                                <option value="<?= $b['id'] ?>" <?= ($product['brand_id'] ?? '') == $b['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($b['name']) ?>
+                                </option>
                             <?php endwhile; ?>
                         </select>
-                        <label>Brand</label>
-                    </div>
-                    <div class="col-md-4 mb-3 form-outline">
-                        <select class="form-select" name="category_id" required>
-                            <?php $categories->data_seek(0);
-                            while ($c = $categories->fetch_assoc()): ?>
-                                <option value="<?= $c['id'] ?>" <?= $product['category_id'] == $c['id'] ? : '' ?>></option>
-                            <?php endwhile; ?>
-                        </select>
-                        <label>Category</label>
+                        <label class="form-label">Brand</label>
                     </div>
 
+                    <!-- Category -->
                     <div class="col-md-4 mb-3 form-outline">
-                        <input class="form-control" type="number" name="discount" step="0.01" placeholder=" ">
-                        <label>Discount (%)</label>
+                        <select class="form-select" name="category_id" required>
+                            <option value="">Select Category</option>
+                            <?php
+                            $categories->data_seek(0); // Reset pointer
+                            while ($c = $categories->fetch_assoc()): ?>
+                                <option value="<?= $c['id'] ?>" <?= ($product['category_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($c['name']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                        <label class="form-label">Category</label>
                     </div>
+
+                    <!-- Discount -->
+                    <div class="col-md-4 mb-3 form-outline">
+                        <input class="form-control" type="number" name="discount" step="0.01"
+                            value="<?= htmlspecialchars($product['discount_percent'] ?? '') ?>" placeholder=" ">
+                        <label class="form-label">Discount (%)</label>
+                    </div>
+
                 </div>
+
 
                 <div class="form-check mb-3">
                     <input type="checkbox" name="featured" class="form-check-input" id="featured">

@@ -193,6 +193,7 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
                                 <li><a class="dropdown-item" href="profile.php">Profile</a></li>
+                                <li><a class="dropdown-item" href="my_orders.php">My Orders</a></li>
                                 <li><a class="dropdown-item" href="settings.php">Settings</a></li>
                                 <?php if ($role == 'admin'): ?>
                                     <li><a class="dropdown-item" href="dashboard/index.php">Dashboard</a></li>

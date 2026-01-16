@@ -2,130 +2,107 @@
 session_start();
 require 'inc/db.php';
 
-// Check if user logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
 $cart = $_SESSION['cart'] ?? [];
-
 if (empty($cart)) {
-    die("<div class='container mt-5'><h3>Your cart is empty.</h3></div>");
+    die("<div class='container mt-5 text-center'><h3>Cart is empty</h3></div>");
 }
 
-// Calculate total price
-$total_price = 0;
+$total = 0;
 foreach ($cart as $item) {
-    $total_price += $item['qty'] * $item['price'];
-}
-
-$message = '';
-
-// ===========================
-// Handle Checkout POST
-// ===========================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
-    $address = trim($_POST['address']);
-    $payment_method = $_POST['payment_method']; // COD or QR
-
-    // ---------------------------
-    // 1. Insert into orders table
-    // ---------------------------
-    $stmt = $conn->prepare("
-        INSERT INTO orders (user_id, total_price, status, payment_method, address)
-        VALUES (?, ?, 'Pending', ?, ?)
-    ");
-    $stmt->bind_param("idss", $user_id, $total_price, $payment_method, $address);
-    $stmt->execute();
-    $order_id = $stmt->insert_id;
-    $stmt->close();
-
-    // ---------------------------
-    // 2. Insert into order_items
-    // ---------------------------
-    foreach ($cart as $item) {
-        $stmt = $conn->prepare("
-            INSERT INTO order_items (order_id, product_id, qty, price)
-            VALUES (?, ?, ?, ?)
-        ");
-        $stmt->bind_param("iiid", $order_id, $item['id'], $item['qty'], $item['price']);
-        $stmt->execute();
-        $stmt->close();
-    }
-
-    // ---------------------------
-    // 3. Insert into payments
-    // ---------------------------
-    $stmt = $conn->prepare("
-        INSERT INTO payments (order_id, amount, method, status)
-        VALUES (?, ?, ?, 'Pending')
-    ");
-    $stmt->bind_param("ids", $order_id, $total_price, $payment_method);
-    $stmt->execute();
-    $stmt->close();
-
-    // ---------------------------
-    // 4. Clear Cart
-    // ---------------------------
-    unset($_SESSION['cart']);
-    setcookie('cart', '', time() - 3600, "/");
-
-    // Redirect to order success page
-    header("Location: order_success.php?order_id=" . $order_id);
-    exit;
+    $total += $item['qty'] * $item['price'];
 }
 
 include 'inc/header.php';
 ?>
 
-<div class="container mt-5">
-    <h2>Checkout</h2>
+<div class="container my-5">
+    <div class="card shadow-sm rounded-4 p-4">
+        <h2 class="mb-4 text-primary fw-bold">Checkout</h2>
 
-    <table class="table mb-4">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($cart as $item):
-                $subtotal = $item['qty'] * $item['price'];
-            ?>
-                <tr>
-                    <td><?= htmlspecialchars($item['name']) ?></td>
-                    <td><?= $item['qty'] ?></td>
-                    <td>$<?= number_format($item['price'], 2) ?></td>
-                    <td>$<?= number_format($subtotal, 2) ?></td>
-                </tr>
-            <?php endforeach; ?>
-            <tr>
-                <td colspan="3"><strong>Total</strong></td>
-                <td><strong>$<?= number_format($total_price, 2) ?></strong></td>
-            </tr>
-        </tbody>
-    </table>
+        <form action="place_order.php" method="POST">
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Shipping Address</label>
+                <textarea class="form-control rounded-3 border-1 shadow-sm" name="address" rows="3" required><?= htmlspecialchars($_POST['address'] ?? '') ?></textarea>
+            </div>
 
-    <form method="post">
-        <div class="mb-3">
-            <label for="address" class="form-label">Shipping Address</label>
-            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
-        </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Payment Method</label>
+                <select class="form-select rounded-3 border-1 shadow-sm" name="payment_method" id="payment_method" required>
+                    <option value="COD">Cash On Delivery</option>
+                    <option value="QR">QR Payment</option>
+                    <option value="Credit">Credit Card</option>
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Payment Method</label>
-            <select name="payment_method" class="form-select" required>
-                <option value="COD">Cash on Delivery (COD)</option>
-                <option value="QR">QR Payment</option>
-            </select>
-        </div>
+            <div id="credit_form" class="border rounded-3 p-3 mb-4" style="display:none; background-color: #f9f9f9;">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Card Number</label>
+                    <input type="text" name="card_number" class="form-control rounded-3" placeholder="1234 5678 9012 3456">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Expiry Date</label>
+                        <input type="text" name="card_expiry" class="form-control rounded-3" placeholder="MM/YY">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">CVV</label>
+                        <input type="text" name="cvv" class="form-control rounded-3" placeholder="123">
+                    </div>
+                </div>
+            </div>
 
-        <button type="submit" name="checkout" class="btn btn-success">Place Order</button>
-    </form>
+            <input type="hidden" name="total_price" value="<?= $total ?>">
+
+            <button type="submit" class="btn btn-gradient w-100 py-2 fw-bold">
+                Place Order ($<?= number_format($total, 2) ?>)
+            </button>
+        </form>
+    </div>
 </div>
+
+<style>
+    .btn-gradient {
+        background: linear-gradient(135deg, #4f46e5, #3b82f6);
+        color: #fff;
+        font-size: 1.1rem;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #3b82f6, #4f46e5);
+    }
+
+    textarea.form-control,
+    input.form-control,
+    select.form-select {
+        transition: all 0.3s;
+    }
+
+    textarea.form-control:focus,
+    input.form-control:focus,
+    select.form-select:focus {
+        box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
+        border-color: #4f46e5;
+    }
+</style>
+
+<script>
+    document.getElementById('payment_method').addEventListener('change', function() {
+        const creditDiv = document.getElementById('credit_form');
+        if (this.value === 'Credit') {
+            creditDiv.style.display = 'block';
+            creditDiv.querySelectorAll('input').forEach(i => i.required = true);
+        } else {
+            creditDiv.style.display = 'none';
+            creditDiv.querySelectorAll('input').forEach(i => i.required = false);
+        }
+    });
+</script>
 
 <?php include 'inc/footer.php'; ?>

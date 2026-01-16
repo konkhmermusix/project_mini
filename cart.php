@@ -61,7 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tr>
             </thead>
             <tbody>
+
                 <?php foreach ($cart as $item):
+
+                    if (!is_array($item)) continue;
+
                     $subtotal = $item['qty'] * $item['price'];
                     $total += $subtotal;
                 ?>
