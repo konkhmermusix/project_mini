@@ -17,6 +17,7 @@ $sql = "
     WHERE o.user_id = ?
     ORDER BY o.created_at DESC
 ";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
