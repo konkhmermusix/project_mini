@@ -81,31 +81,6 @@ if (isset($_POST['submit'])) {
         header("Location: slideshows.php");
         exit;
     }
-
-    // if (empty($message)) {
-    //     $stmt = $conn->prepare(
-    //         "UPDATE slideshow 
-    //          SET title=?, description=?, image=?, link=?, position=?, status=? 
-    //          WHERE id=?"
-    //     );
-
-    //     $stmt->bind_param(
-    //         "ssssiii",
-    //         $title,
-    //         $description,
-    //         $image,
-    //         $link,
-    //         $position,
-    //         $status,
-    //         $id
-    //     );
-
-    //     $stmt->execute();
-    //     $stmt->close();
-
-    //     header("Location: slideshows.php");
-    //     exit;
-    // }
 }
 
 require('inc/header.php');
@@ -194,7 +169,7 @@ require('inc/header.php');
                 </div>
 
                 <div class="form-outline mb-3">
-                    <input type="number" name="position" class="form-control" value="0" value="<?= htmlspecialchars($slide['position']) ?>">
+                    <input type="number" name="position" class="form-control" value="<?= htmlspecialchars($slide['position']) ?>">
                     <label>Position</label>
                 </div>
 

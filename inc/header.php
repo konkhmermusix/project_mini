@@ -8,6 +8,9 @@ $username = $_SESSION['username'] ?? 'Guest';
 $role = $_SESSION['role'] ?? '';
 $firstLetter = strtoupper($username[0] ?? 'G');
 $cartCount = $_SESSION['cart_count'] ?? 0;
+
+$page = basename($_SERVER['PHP_SELF'], '.php');
+$pageTitle = ucwords(str_replace('-', ' ', $page));
 ?>
 
 <!DOCTYPE html>
@@ -15,24 +18,22 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
 
 <head>
     <meta charset="UTF-8">
-    <title>My PHP Project</title>
+    <title><?= $pageTitle ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <!-- Link Swiper's CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
-
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
 
     <style>
+        body {
+            font-family: 'Kantumruy Pro', sans-serif;
+        }
+
+
         /* Navbar style */
         .navbar-brand {
             font-weight: 600;
@@ -98,8 +99,8 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
         .swiper {
             width: 100%;
             height: 400px;
-            margin: 30px auto;
-            border-radius: 10px;
+            margin: 0px auto;
+
         }
 
         .swiper-slide {
@@ -121,23 +122,48 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
         .slide3 {
             background: #9b59b6;
         }
+
+        .review-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .avatar-text {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #0d6efd;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .alert-top-right {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            /* Bootstrap modal higher z-index */
+            min-width: 250px;
     </style>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm p-3 sticky-top">
         <div class="container">
-
-            <!-- Brand -->
-            <a class="navbar-brand" href="index.php">MyShop</a>
+            <a class="navbar-brand" href="index.php">
+                <h3>LSTECH</h3>
+            </a>
             <button class="navbar-toggler shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
-
-                <!-- Left nav links -->
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 text-center">
                     <li class="nav-item me-3">
                         <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'index.php') echo 'active'; ?>" href="index.php">
@@ -145,16 +171,10 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                         </a>
                     </li>
                     <li class="nav-item me-3">
-                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'products.php') echo 'active'; ?>" href="products.php">
-                            Products
-                        </a>
-                    </li>
-                    <li class="nav-item me-3">
                         <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'shop.php') echo 'active'; ?>" href="shop.php">
                             Shop
                         </a>
                     </li>
-
                     <li class="nav-item me-3">
                         <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'blog.php') echo 'active'; ?>" href="blog.php">Blog</a>
                     </li>
@@ -166,15 +186,14 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                     </li>
                 </ul>
 
-                <!-- Right buttons -->
                 <ul class="navbar-nav ms-auto align-items-lg-center">
-
-                    <!-- Search -->
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-primary btn-nav" href="#"><i class="bi bi-search"></i></a>
+                        <div class="input-group">
+                            <input type="text" class="form-control shadow-none" placeholder="search products ">
+                            <a class="btn btn-outline-primary btn-nav shadow-none justify-content-between align-items-center" href="#"><i class="bi bi-search"></i></a>
+                        </div>
                     </li>
 
-                    <!-- Cart -->
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-primary btn-nav position-relative" href="cart.php" id="cartLink">
                             <i class="bi bi-cart"></i> Cart
@@ -184,8 +203,6 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                         </a>
                     </li>
 
-
-                    <!-- Account / avatar -->
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown me-2">
                             <a class="btn btn-nav avatar-circle dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -196,7 +213,7 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
                                 <li><a class="dropdown-item" href="my_orders.php">My Orders</a></li>
                                 <li><a class="dropdown-item" href="settings.php">Settings</a></li>
                                 <?php if ($role == 'admin'): ?>
-                                    <li><a class="dropdown-item" href="dashboard/index.php">Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="dashboard/dashboard.php">Dashboard</a></li>
                                 <?php endif; ?>
                                 <li>
                                     <hr class="dropdown-divider">
@@ -214,4 +231,4 @@ $cartCount = $_SESSION['cart_count'] ?? 0;
         </div>
     </nav>
 
-    <div class="container mt-4 mb-4">
+    <div class="">

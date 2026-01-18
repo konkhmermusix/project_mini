@@ -14,7 +14,12 @@ if (empty($cart)) {
 
 $total = 0;
 foreach ($cart as $item) {
+    if (!is_array($item)) continue;
     $total += $item['qty'] * $item['price'];
+}
+
+if (empty($cart)) {
+    die("Cart is empty");
 }
 
 include 'inc/header.php';

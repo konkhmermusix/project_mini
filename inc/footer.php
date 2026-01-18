@@ -7,13 +7,13 @@
 
             <!-- About / Logo -->
             <div class="col-md-3 mb-4">
-                <h5 class="fw-bold">MyShop</h5>
+                <h5 class="fw-bold">LSTECH</h5>
                 <p>Your one-stop online store for electronics, fashion, accessories, and more!</p>
             </div>
 
             <!-- Quick Links -->
             <div class="col-md-3 mb-4">
-                <h6 class="fw-bold">Quick Links</h6>
+                <h4 class="fw-bold">Quick Links</h4>
                 <ul class="list-unstyled">
                     <li>
                         <a href="index.php" class="text-white text-decoration-none <?php if (basename($_SERVER['PHP_SELF']) == 'index.php') echo 'active'; ?>">Home</a>
@@ -38,7 +38,7 @@
 
             <!-- Customer Service -->
             <div class="col-md-3 mb-4">
-                <h6 class="fw-bold">Customer Service</h6>
+                <h4 class="fw-bold">Customer Service</h4>
                 <ul class="list-unstyled">
                     <li><a href="#" class="text-white text-decoration-none">FAQ</a></li>
                     <li><a href="#" class="text-white text-decoration-none">Shipping & Returns</a></li>
@@ -49,14 +49,12 @@
 
             <!-- Contact / Social -->
             <div class="col-md-3 mb-4">
-                <h6 class="fw-bold">Contact Us</h6>
-                <p>Email: support@myshop.com</p>
-                <p>Phone: +1 234 567 890</p>
+                <h4 class="fw-bold">Contact Us</h4>
+                <p>Email: lstech26@myshop.com</p>
+                <p>Phone: +885 964 301 974</p>
                 <div class="d-flex gap-2 mt-2">
-                    <a href="#" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-white fs-5"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="text-white fs-5"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="text-white fs-5"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://web.facebook.com/lstechcambodia/" class="me-2 text-decoration-none text-white"><i class="bi bi-facebook fs-4"></i></a>
+                    <a href="https://t.me/+eAa1Nx77HxM1MTg1" class="me-2 text-decoration-none text-white"><i class="bi bi-telegram fs-4"></i></a>
                 </div>
             </div>
 
@@ -65,17 +63,20 @@
         <hr class="border-light">
 
         <div class="text-center small">
-            &copy; <?php echo date('Y'); ?> MyShop. All Rights Reserved.
+            &copy; <?php echo date('Y'); ?> LSTECH. All Rights Reserved.
         </div>
     </div>
-
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
-
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 800,
+        once: true
+    });
+</script>
 
 <script>
     document.getElementById('addToCartForm').addEventListener('submit', function(e) {
@@ -100,6 +101,7 @@
             .catch(err => console.error(err));
     });
 </script>
+
 
 
 </body>

@@ -2,18 +2,16 @@
 require 'inc/header.php';
 require '../inc/db.php';
 
-// Admin guard
+// Admin Permision
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit;
 }
 
-// Pagination settings
-$limit = 10;
+// Pagination
+$limit = 5;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
-
-// Total products
 $totalResult = $conn->query("SELECT COUNT(*) AS total FROM products WHERE status=1");
 $totalRecords = $totalResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRecords / $limit);
@@ -26,35 +24,34 @@ $sql = "SELECT p.*, b.name AS brand_name, c.name AS category_name
         WHERE p.status=1
         ORDER BY p.id DESC
         LIMIT $limit OFFSET $offset";
-
 $result = $conn->query($sql);
 ?>
 
-<div class="container mt-4">
-    <div class="d-flex align-items-center mb-3">
+<div class="px-2 mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="me-auto">Products</h2>
         <a class="btn btn-success" href="product_add.php">Add Product</a>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle">
-            <thead class="table-dark">
+        <table class="table table-bordered table-hover table-active align-middle">
+            <thead class="">
                 <tr>
-                    <th>ID</th>
+                    <th class="text-center">ID</th>
                     <th>Image</th>
                     <th>Name</th>
                     <th>Brand</th>
                     <th>Category</th>
                     <th>Price</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if ($result->num_rows > 0): ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <tr>
-                            <td><?= $row['id'] ?></td>
+                            <td class="text-center"><?= $row['id'] ?></td>
                             <td>
                                 <?php if (!empty($row['image'])): ?>
                                     <img src="../<?= htmlspecialchars($row['image']) ?>" style="width:70px;height:auto;" alt="<?= htmlspecialchars($row['name']) ?>">
@@ -67,9 +64,9 @@ $result = $conn->query($sql);
                             <td>
                                 <?= $row['status'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
                             </td>
-                            <td>
-                                <a class="btn btn-primary btn-sm" href="product_edit.php?id=<?= $row['id'] ?>">Edit</a>
-                                <a class="btn btn-danger btn-sm" href="product_delete.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
+                            <td class="text-center">
+                                <a class="btn btn-primary btn-sm" href="product_edit.php?id=<?= $row['id'] ?>"><i class="bi bi-pencil-square"></i></a>
+                                <a class="btn btn-danger btn-sm" href="product_delete.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')"><i class="bi bi-trash"></i></a>
                             </td>
                         </tr>
                     <?php endwhile; ?>

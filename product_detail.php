@@ -2,38 +2,35 @@
 session_start();
 require 'inc/db.php';
 
+// ==========================
 // Get Product ID
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// ==========================
+$productId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($productId <= 0) die("Invalid product.");
 
 // ==========================
-// Initialize Cart
+// Initialize Cart (session + cookie)
 // ==========================
 if (!isset($_SESSION['cart'])) {
-    if (isset($_COOKIE['cart'])) {
-        $_SESSION['cart'] = json_decode($_COOKIE['cart'], true);
-    } else {
-        $_SESSION['cart'] = [];
-    }
+    $_SESSION['cart'] = isset($_COOKIE['cart']) ? json_decode($_COOKIE['cart'], true) : [];
 }
 
 // ==========================
-// Redirect guest to login
+// Handle Add to Cart
 // ==========================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+
     if (!isset($_SESSION['user_id'])) {
-        // Save attempted product in session (optional)
-        $_SESSION['redirect_product'] = intval($_POST['product_id']);
+        $_SESSION['redirect_product'] = $productId;
         header("Location: login.php");
         exit;
     }
 
-    $product_id = intval($_POST['product_id']);
-    $qty        = intval($_POST['qty']);
-    if ($qty < 1) $qty = 1;
+    $qty = max(1, intval($_POST['qty']));
 
-    // Fetch product
-    $stmt = $conn->prepare("SELECT id, name, price, qty, image FROM products WHERE id=? AND status=1");
-    $stmt->bind_param("i", $product_id);
+    // Fetch product for stock validation
+    $stmt = $conn->prepare("SELECT id, name, price, qty, image, cost_price FROM products WHERE id=? AND status=1");
+    $stmt->bind_param("i", $productId);
     $stmt->execute();
     $product = $stmt->get_result()->fetch_assoc();
     $stmt->close();
@@ -41,40 +38,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     if (!$product) die("Product not found");
     if ($qty > $product['qty']) $qty = $product['qty'];
 
-    // Add/update cart in session
-    if (isset($_SESSION['cart'][$product_id])) {
-        $newQty = $_SESSION['cart'][$product_id]['qty'] + $qty;
-        if ($newQty > $product['qty']) $newQty = $product['qty'];
-        $_SESSION['cart'][$product_id]['qty'] = $newQty;
+    // Add or update cart
+    if (isset($_SESSION['cart'][$productId])) {
+        $newQty = $_SESSION['cart'][$productId]['qty'] + $qty;
+        $_SESSION['cart'][$productId]['qty'] = min($newQty, $product['qty']);
     } else {
-        $_SESSION['cart'][$product_id] = [
-            'id'    => $product['id'],
-            'name'  => $product['name'],
+        $_SESSION['cart'][$productId] = [
+            'id' => $product['id'],
+            'name' => $product['name'],
             'price' => $product['price'],
-            'qty'   => $qty,
-            'image' => $product['image']
+            'qty' => $qty,
+            'image' => $product['image'],
+            'cost_price' => $product['cost_price']
         ];
     }
 
-    // Save cart in cookie (7 days)
-    setcookie('cart', json_encode($_SESSION['cart']), time() + (7 * 24 * 60 * 60), "/");
-
+    // Save cookie
+    setcookie('cart', json_encode($_SESSION['cart']), time() + 7 * 24 * 60 * 60, "/");
     $_SESSION['cart_success'] = "Product added to cart!";
-    header("Location: product_detail.php?id=" . $product_id);
+    header("Location: product_detail.php?id=$productId");
     exit;
 }
 
-// Load product details
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$stmt = $conn->prepare("SELECT * FROM products WHERE id=? AND status=1");
-$stmt->bind_param("i", $id);
+// ==========================
+// Load Product Details
+// ==========================
+$stmt = $conn->prepare("
+    SELECT p.*, b.name AS brand_name, c.name AS category_name
+    FROM products p
+    LEFT JOIN brands b ON p.brand_id=b.id
+    LEFT JOIN categories c ON p.category_id=c.id
+    WHERE p.id=? AND p.status=1
+");
+$stmt->bind_param("i", $productId);
 $stmt->execute();
 $product = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$product) die("Product not found");
+if (!$product) die("Product not found!");
 
-// Handle Review 
+// ==========================
+// Handle Submit Review
+// ==========================
+$error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
 
     if (!isset($_SESSION['user_id'])) {
@@ -82,83 +88,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
         exit;
     }
 
-    $product_id = intval($_POST['product_id']);
-    $user_id    = $_SESSION['user_id'];
-    $rating     = intval($_POST['rating']);
-    $comment    = trim($_POST['comment']);
+    $rating  = intval($_POST['rating']);
+    $comment = trim($_POST['comment']);
+    $userId  = $_SESSION['user_id'];
 
-    if ($product_id > 0 && $rating >= 1 && $rating <= 5) {
-
-        $chk = $conn->prepare("  // Check duplicate review
-            SELECT id FROM reviews
-            WHERE product_id = ? AND user_id = ?
-        ");
-        $chk->bind_param("ii", $product_id, $user_id);
+    if ($rating < 1 || $rating > 5) {
+        $error = "Invalid rating.";
+    } else {
+        // Check duplicate
+        $chk = $conn->prepare("SELECT id FROM reviews WHERE product_id=? AND user_id=?");
+        $chk->bind_param("ii", $productId, $userId);
         $chk->execute();
         $chk->store_result();
-
-        if ($chk->num_rows === 0) {
-            $stmt = $conn->prepare("
-                INSERT INTO reviews (product_id, user_id, rating, comment, status)
-                VALUES (?, ?, ?, ?, 1)
-            ");
-            $stmt->bind_param("iiis", $product_id, $user_id, $rating, $comment);
-            $stmt->execute();
-            $stmt->close();
-
-            header("Location: product_detail.php?id=" . $product_id);
-            exit;
-        } else {
-            $error = "You already reviewed this product.";
-        }
+        if ($chk->num_rows > 0) $error = "You already reviewed this product.";
         $chk->close();
-    } else {
-        $error = "Invalid rating.";
+    }
+
+    if (!$error) {
+        $stmt = $conn->prepare("INSERT INTO reviews (product_id,user_id,rating,comment,status) VALUES (?,?,?,?,1)");
+        $stmt->bind_param("iiis", $productId, $userId, $rating, $comment);
+        $stmt->execute();
+        $stmt->close();
+        header("Location: product_detail.php?id=$productId");
+        exit;
     }
 }
 
-
-// Fetch Product
-$stmt = $conn->prepare("
-    SELECT p.*, 
-           b.name AS brand_name,
-           c.name AS category_name
-    FROM products p
-    LEFT JOIN brands b ON p.brand_id = b.id
-    LEFT JOIN categories c ON p.category_id = c.id
-    WHERE p.id = ? AND p.status = 1
-");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$product = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-if (!$product) {
-    die("<div class='container mt-5'><h3>Product not found!</h3></div>");
-}
-
+// ==========================
 // Rating Summary
-$rateStmt = $conn->prepare("
-    SELECT AVG(rating) AS avg_rating, COUNT(*) AS total_reviews
-    FROM reviews
-    WHERE product_id = ? AND status = 1
-");
-$rateStmt->bind_param("i", $id);
+// ==========================
+$rateStmt = $conn->prepare("SELECT AVG(rating) AS avg_rating, COUNT(*) AS total_reviews FROM reviews WHERE product_id=? AND status=1");
+$rateStmt->bind_param("i", $productId);
 $rateStmt->execute();
 $rate = $rateStmt->get_result()->fetch_assoc();
 $rateStmt->close();
 
-$avgRating    = round($rate['avg_rating'], 1);
+$avgRating = round($rate['avg_rating'], 1);
 $totalReviews = $rate['total_reviews'];
 
-//    Check User Reviewed
+// ==========================
+// Check if User Reviewed
+// ==========================
 $userReviewed = false;
 if (isset($_SESSION['user_id'])) {
-    $chk = $conn->prepare("
-        SELECT id FROM reviews
-        WHERE product_id = ? AND user_id = ?
-    ");
-    $chk->bind_param("ii", $id, $_SESSION['user_id']);
+    $chk = $conn->prepare("SELECT id FROM reviews WHERE product_id=? AND user_id=?");
+    $chk->bind_param("ii", $productId, $_SESSION['user_id']);
     $chk->execute();
     $chk->store_result();
     $userReviewed = $chk->num_rows > 0;
@@ -169,23 +143,17 @@ include 'inc/header.php';
 ?>
 
 <div class="container my-5">
-    <div class="row">
 
+    <div class="row">
         <!-- Image -->
         <div class="col-md-6">
-            <img src="<?= htmlspecialchars($product['image']) ?>"
-                class="img-fluid rounded shadow"
-                style="height:400px; object-fit:cover;">
+            <img src="<?= htmlspecialchars($product['image']) ?>" class="img-fluid rounded shadow" style="height:400px; object-fit:cover;">
         </div>
 
         <!-- Info -->
         <div class="col-md-6">
             <h2><?= htmlspecialchars($product['name']) ?></h2>
-
-            <p class="text-muted">
-                Category: <?= htmlspecialchars($product['category_name']) ?> |
-                Brand: <?= htmlspecialchars($product['brand_name']) ?>
-            </p>
+            <p class="text-muted">Category: <?= htmlspecialchars($product['category_name']) ?> | Brand: <?= htmlspecialchars($product['brand_name']) ?></p>
 
             <!-- Rating -->
             <p>
@@ -197,27 +165,26 @@ include 'inc/header.php';
 
             <!-- Price -->
             <?php
-            $discount   = $product['discount_percent'] ?? 0;
+            $discount = $product['discount_percent'] ?? 0;
             $finalPrice = $product['price'] - ($product['price'] * $discount / 100);
             ?>
             <p class="h4 text-danger">
                 $<?= number_format($finalPrice, 2) ?>
                 <?php if ($discount > 0): ?>
-                    <small class="text-muted text-decoration-line-through">
-                        $<?= number_format($product['price'], 2) ?>
-                    </small>
+                    <small class="text-muted text-decoration-line-through">$<?= number_format($product['price'], 2) ?></small>
+                    <span class="badge bg-danger"><?= $discount ?>% OFF</span>
                 <?php endif; ?>
             </p>
+            <p class="small text-muted">Cost Price: $<?= number_format($product['cost_price'], 2) ?></p>
 
             <!-- Add to Cart -->
             <?php if ($product['qty'] > 0): ?>
-                <form method="post" id="addToCartForm" class="d-flex gap-2">
-                    <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                    <input type="number" name="qty" value="1" min="1"
-                        max="<?= $product['qty'] ?>"
-                        class="form-control w-25 shadow-none">
+                <form method="post" class="d-flex gap-2">
+                    <input type="hidden" name="product_id" value="<?= $productId ?>">
+                    <input type="number" name="qty" value="1" min="1" max="<?= $product['qty'] ?>" class="form-control w-25">
                     <button name="add_to_cart" class="btn btn-success">Add to Cart</button>
                 </form>
+                <small class="text-muted"><?= $product['qty'] ?> items in stock</small>
             <?php else: ?>
                 <button class="btn btn-secondary" disabled>Out of Stock</button>
             <?php endif; ?>
@@ -227,19 +194,14 @@ include 'inc/header.php';
     <!-- Tabs -->
     <ul class="nav nav-tabs mt-5">
         <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc">
-                Description
-            </button>
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc">Description</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">
-                Reviews (<?= $totalReviews ?>)
-            </button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">Reviews (<?= $totalReviews ?>)</button>
         </li>
     </ul>
 
     <div class="tab-content border p-4">
-
         <!-- Description -->
         <div class="tab-pane fade show active" id="desc">
             <?= nl2br(htmlspecialchars($product['description'])) ?>
@@ -247,16 +209,15 @@ include 'inc/header.php';
 
         <!-- Reviews -->
         <div class="tab-pane fade" id="reviews">
-
             <?php
             $revStmt = $conn->prepare("
                 SELECT r.*, u.username
                 FROM reviews r
-                JOIN users u ON r.user_id = u.id
-                WHERE r.product_id = ? AND r.status = 1
+                JOIN users u ON r.user_id=u.id
+                WHERE r.product_id=? AND r.status=1
                 ORDER BY r.created_at DESC
             ");
-            $revStmt->bind_param("i", $id);
+            $revStmt->bind_param("i", $productId);
             $revStmt->execute();
             $reviews = $revStmt->get_result();
             ?>
@@ -283,23 +244,15 @@ include 'inc/header.php';
 
             <!-- Review Form -->
             <?php if (!isset($_SESSION['user_id'])): ?>
-                <div class="alert alert-warning">
-                    Please <a href="login.php">login</a> to write a review.
-                </div>
-
+                <div class="alert alert-warning">Please <a href="login.php">login</a> to write a review.</div>
             <?php elseif ($userReviewed): ?>
-                <div class="alert alert-info">
-                    You already reviewed this product.
-                </div>
-
+                <div class="alert alert-info">You already reviewed this product.</div>
             <?php else: ?>
                 <?php if (!empty($error)): ?>
                     <div class="alert alert-danger"><?= $error ?></div>
                 <?php endif; ?>
-
                 <form method="post">
-                    <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-
+                    <input type="hidden" name="product_id" value="<?= $productId ?>">
                     <select name="rating" class="form-select mb-2" required>
                         <option value="">Select rating</option>
                         <option value="5">★★★★★</option>
@@ -308,16 +261,10 @@ include 'inc/header.php';
                         <option value="2">★★</option>
                         <option value="1">★</option>
                     </select>
-
-                    <textarea name="comment" class="form-control mb-2"
-                        placeholder="Your review"></textarea>
-
-                    <button class="btn btn-primary" name="submit_review">
-                        Submit Review
-                    </button>
+                    <textarea name="comment" class="form-control mb-2" placeholder="Your review" required></textarea>
+                    <button class="btn btn-primary" name="submit_review">Submit Review</button>
                 </form>
             <?php endif; ?>
-
         </div>
     </div>
 </div>

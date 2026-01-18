@@ -23,6 +23,12 @@ $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $orders = $stmt->get_result();
 $stmt->close();
+
+if ($orders->num_rows === 0) {
+    header("Location: error.php?msg=You have no orders yet!");
+    exit;
+}
+
 ?>
 
 <div class="container my-5">

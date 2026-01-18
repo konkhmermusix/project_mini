@@ -195,8 +195,6 @@ if (isset($_POST['login'])) {
             <h3 class="fw-bold">Login</h3>
         </div>
 
-
-
         <form method="POST" autocomplete="off">
 
             <!-- Email -->

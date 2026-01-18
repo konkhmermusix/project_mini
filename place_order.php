@@ -10,7 +10,16 @@ if (!isset($_SESSION['user_id'])) {
 // Cart check
 $cart = $_SESSION['cart'] ?? [];
 if (empty($cart)) {
-    die("<div class='container mt-5'><h3>Cart is empty</h3></div>");
+    include 'inc/header.php';
+?>
+    <div class="container mt-5 text-center">
+        <h3 class="mb-3">Your Cart is Empty</h3>
+        <p class="text-muted">You have no items in your cart. <a href="index.php">Go Shopping</a></p>
+        <a href="index.php" class="btn btn-primary mt-3">Browse Products</a>
+    </div>
+<?php
+    include 'inc/footer.php';
+    exit;
 }
 
 // POST data
@@ -28,11 +37,16 @@ $stmt->close();
 
 // Insert order items
 foreach ($cart as $item) {
-    $pid = $item['id'];
-    $qty = $item['qty'];
-    $price = $item['price'];
+    if (!is_array($item)) continue;
+    if (!isset($item['id'], $item['qty'], $item['price'])) continue;
+    $pid   = (int) $item['id'];
+    $qty   = (int) $item['qty'];
+    $price = (float) $item['price'];
 
-    $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, qty, price) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare("
+        INSERT INTO order_items (order_id, product_id, qty, price)
+        VALUES (?, ?, ?, ?)
+    ");
     $stmt->bind_param("iiid", $order_id, $pid, $qty, $price);
     $stmt->execute();
     $stmt->close();
@@ -52,6 +66,7 @@ $stmt->close();
 unset($_SESSION['cart']);
 setcookie('cart', '', time() - 3600, '/');
 
+include 'inc/header.php';
 // Handle payment method
 if ($payment_method === 'QR') {
     // Show QR
@@ -61,20 +76,27 @@ if ($payment_method === 'QR') {
     if ($payment_method === 'QR') {
     ?>
         <div class="container my-5">
-            <div class="card shadow-sm rounded-4 p-4 text-center">
-                <h2 class="text-primary fw-bold mb-3">Scan QR to Pay</h2>
-                <p class="mb-1"><strong>Order ID:</strong> <?= $order_id ?></p>
-                <p class="mb-3"><strong>Amount:</strong> $<?= number_format($total_price, 2) ?></p>
-
-                <div class="d-inline-block p-3 bg-light rounded-3 shadow-sm mb-4">
-                    <img src="generate_qr.php?order_id=<?= $order_id ?>&total_price=<?= $total_price ?>" alt="QR Code" class="img-fluid">
-
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ORDER:<?= $order_id ?>|AMOUNT:<?= $total_price ?>" alt="QR Code" class="img-fluid">
+            <div class="row">
+                <div class="col-md-4">
                 </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm rounded-4 p-4 text-center">
+                        <h2 class="text-primary fw-bold mb-3">Scan QR to Pay</h2>
+                        <p class="mb-1"><strong>Order ID:</strong> <?= $order_id ?></p>
+                        <p class="mb-3"><strong>Amount:</strong> $<?= number_format($total_price, 2) ?></p>
 
-                <p class="text-muted mb-4">Use your banking app to scan the QR code and complete payment.</p>
+                        <div class="d-inline-block p-3 bg-light rounded-3 shadow-sm mb-4">
 
-                <a href="order_success.php?id=<?= $order_id ?>" class="btn btn-gradient btn-lg px-4 fw-bold">I have paid</a>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ORDER:<?= $order_id ?>|AMOUNT:<?= $total_price ?>" alt="QR Code" class="img-fluid">
+                        </div>
+
+                        <p class="text-muted mb-4">Use your banking app to scan the QR code and complete payment.</p>
+
+                        <a href="order_success.php?id=<?= $order_id ?>" class="btn btn-gradient btn-lg px-4 fw-bold">I have paid</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
             </div>
         </div>
 
@@ -91,6 +113,10 @@ if ($payment_method === 'QR') {
                 color: #fff;
             }
         </style>
+        <?php
+
+        require 'inc/footer.php';
+        ?>
 <?php
         exit;
     }
@@ -103,4 +129,5 @@ if ($payment_method === 'QR') {
     header("Location: order_success.php?id=$order_id");
     exit;
 }
+
 ?>
