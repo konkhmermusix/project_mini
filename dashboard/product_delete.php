@@ -1,8 +1,15 @@
 <?php
 require '../inc/db.php';
 session_start();
-if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') die("Access denied.");
+// Admin Permision
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../login.php");
+    exit;
+}
 
-$id = $_GET['id'];
-$conn->query("DELETE FROM products WHERE id=$id");
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+$conn->query("UPDATE products SET status=0 WHERE id=$id");
+// $conn->query("DELETE FROM products WHERE id=$id");
+
 header("Location: products.php");

@@ -36,6 +36,12 @@ if (isset($_POST['register'])) {
         }
     }
 }
+
+$conn->query("
+    INSERT INTO notifications (message, type)
+    VALUES ('New user has registered', 'user')
+");
+
 ?>
 
 <!DOCTYPE html>
@@ -46,10 +52,7 @@ if (isset($_POST['register'])) {
     <title>Create Account</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
@@ -118,25 +121,21 @@ if (isset($_POST['register'])) {
         <?php if (!empty($message)) echo $message; ?>
         <form method="POST" autocomplete="off">
 
-            <!-- Username -->
             <div class="form-outline mb-3">
                 <input type="text" id="username" class="form-control" name="username" placeholder=" " required>
                 <label for="username">Username</label>
             </div>
 
-            <!-- Email -->
             <div class="form-outline mb-3">
                 <input type="email" id="email" class="form-control" name="email" placeholder=" " required>
                 <label for="email">Email address</label>
             </div>
 
-            <!-- Password -->
             <div class="form-outline mb-3">
                 <input type="password" id="password" class="form-control" name="password" placeholder=" " required>
                 <label for="password">Password</label>
             </div>
 
-            <!-- Confirm Password -->
             <div class="form-outline mb-3">
                 <input type="password" id="confirm_password" class="form-control" name="confirm_password" placeholder=" " required>
                 <label for="confirm_password">Confirm Password</label>

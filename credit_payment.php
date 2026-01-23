@@ -20,6 +20,25 @@ if (!$order) {
     die("Order not found");
 }
 
+// 1. Insert order
+$conn->query("INSERT INTO orders (user_id, total_price, status) VALUES ($user_id, $total_price, 'Paid')");
+
+// 2. Get order ID
+$order_id = $conn->insert_id;
+
+// 3. Insert notification (prepared statement)
+$stmt = $conn->prepare("
+    INSERT INTO notifications (message, type, link)
+    VALUES (?, ?, ?)
+");
+
+$link = "order_detail.php?id=" . $order_id;
+$message = "Order payment completed";
+$type = "payment";
+
+$stmt->bind_param("sss", $message, $type, $link);
+$stmt->execute();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $card_name   = trim($_POST['card_name']);
     $card_number = trim($_POST['card_number']);

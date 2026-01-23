@@ -24,36 +24,15 @@ if (!$slide) {
 
 // Submit update
 if (isset($_POST['submit'])) {
-
     $title       = trim($_POST['title']);
     $description = trim($_POST['description']);
     $link        = trim($_POST['link']);
     $position    = intval($_POST['position']);
     $status      = isset($_POST['status']) ? 1 : 0;
 
-    $image = $slide['image']; // keep old image
+    $image = $slide['image'];
 
-    // // If upload new image
-    // if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-    //     $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-    //     $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-
-    //     if (!in_array($ext, $allowed)) {
-    //         $message = "<div class='alert alert-danger alert-right'>Invalid image type!</div>";
-    //     } else {
-    //         $newImage = 'uploads/slideshow_' . time() . '_' . basename($_FILES['image']['name']);
-    //         move_uploaded_file($_FILES['image']['tmp_name'], '../' . $newImage);
-
-    //         // delete old image (optional)
-    //         if (file_exists('../' . $slide['image'])) {
-    //             unlink('../' . $slide['image']);
-    //         }
-
-    //         $image = $newImage;
-    //     }
-    // }
-
-    $image = $slide['image']; // Keep old image by default
+    $image = $slide['image'];
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
@@ -86,70 +65,18 @@ if (isset($_POST['submit'])) {
 require('inc/header.php');
 ?>
 
-<style>
-    .form-outline {
-        position: relative;
-    }
-
-    .form-outline input,
-    .form-outline textarea,
-    .form-outline select {
-        height: 45px;
-        padding: 16px 12px;
-        border-radius: 5px;
-    }
-
-    .form-outline label {
-        position: absolute;
-        top: 50%;
-        left: 12px;
-        transform: translateY(-50%);
-        background: #fff;
-        padding: 0 6px;
-        color: #6c757d;
-        font-size: 14px;
-        pointer-events: none;
-        transition: .2s;
-    }
-
-    .form-outline input:focus+label,
-    .form-outline input:not(:placeholder-shown)+label,
-    .form-outline textarea:focus+label,
-    .form-outline textarea:not(:placeholder-shown)+label,
-    .form-outline select:focus+label,
-    .form-outline select:not(:placeholder-shown)+label {
-        top: 0;
-        font-size: 12px;
-        color: #0d6efd;
-    }
-
-    .alert-right {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        min-width: 300px;
-        z-index: 1055;
-        border-radius: 8px;
-    }
-
-    #preview {
-        display: none;
-        max-height: 200px;
-        margin-top: 10px;
-    }
-</style>
-
 
 <?php if (!empty($message)) echo $message; ?>
 
-<div class="container mt-4">
+<div class="px-2 mt-4 mb-5">
     <div class="card shadow-sm mb-3">
         <div class="card-body p-4 d-flex align-items-center">
-            <h3 class="mb-0">Edit Slide</h3>
-            <a href="slideshows.php" class="btn btn-secondary ms-auto">&larr; Back</a>
+            <h3 class="mb-0">Edit Slideshow</h3>
+            <a href="slideshows.php" class="btn btn-secondary ms-auto"><i class="bi bi-arrow-left me-2"></i>Back</a>
         </div>
     </div>
-    <div class="card shadow-sm mb-4">
+
+    <div class="card shadow-sm">
         <div class="card-body p-4">
             <form method="POST" enctype="multipart/form-data">
 
@@ -194,6 +121,8 @@ require('inc/header.php');
     </div>
 </div>
 
+<?php require 'inc/footer.php'; ?>
+
 <script>
     function previewImage(event) {
         var preview = document.getElementById('preview');
@@ -204,5 +133,3 @@ require('inc/header.php');
         document.querySelector('.alert-right')?.remove();
     }, 3000);
 </script>
-
-<?php include 'inc/footer.php'; ?>

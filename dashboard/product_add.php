@@ -85,14 +85,7 @@ require 'inc/header.php';
         color: #0d6efd;
     }
 
-    .alert-right {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        min-width: 300px;
-        z-index: 1055;
-        border-radius: 8px;
-    }
+
 
     #preview {
         display: none;
@@ -103,11 +96,11 @@ require 'inc/header.php';
 
 <?php if (!empty($message)) echo $message; ?>
 
-<div class="container mt-4">
+<div class="px-2 mt-4 mb-5">
     <div class="card shadow-sm mb-3">
         <div class="card-body p-4 d-flex align-items-center">
             <h3 class="mb-0">Add Product</h3>
-            <a href="products.php" class="btn btn-secondary ms-auto">&larr; Back</a>
+            <a href="products.php" class="btn btn-secondary ms-auto"><i class="bi bi-arrow-left me-2"></i>Back</a>
         </div>
     </div>
     <div class="card shadow-sm mb-4">
@@ -140,8 +133,6 @@ require 'inc/header.php';
                 </div>
 
                 <div class="row">
-
-                    <!-- Brand -->
                     <div class="col-md-4 mb-3 form-outline">
                         <select class="form-select" name="brand_id" required>
                             <option value="">Select Brand</option>
@@ -155,11 +146,8 @@ require 'inc/header.php';
                         </select>
                         <label class="form-label">Brand</label>
                     </div>
-
-                    <!-- Category -->
                     <div class="col-md-4 mb-3 form-outline">
                         <select class="form-select" name="category_id" required>
-                            <option value="">Select Category</option>
                             <?php
                             $categories->data_seek(0); // Reset pointer
                             while ($c = $categories->fetch_assoc()): ?>
@@ -170,16 +158,12 @@ require 'inc/header.php';
                         </select>
                         <label class="form-label">Category</label>
                     </div>
-
-                    <!-- Discount -->
                     <div class="col-md-4 mb-3 form-outline">
                         <input class="form-control" type="number" name="discount" step="0.01"
                             value="<?= htmlspecialchars($product['discount_percent'] ?? '') ?>" placeholder=" ">
                         <label class="form-label">Discount (%)</label>
                     </div>
-
                 </div>
-
 
                 <div class="form-check mb-3">
                     <input type="checkbox" name="featured" class="form-check-input" id="featured">
@@ -216,3 +200,7 @@ require 'inc/header.php';
         document.querySelector('.alert-right')?.remove();
     }, 3000);
 </script>
+
+<?php
+require 'inc/footer.php';
+?>

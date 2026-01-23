@@ -1,6 +1,5 @@
 <?php
 session_start();
-require 'inc/header.php';
 require '../inc/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -10,96 +9,128 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 $stats = [];
 
-
-// Count total products
-$product_count = $conn->query("SELECT COUNT(*) AS total FROM products")->fetch_assoc()['total'];
-
-// Count total blog posts
-$blog_count = $conn->query("SELECT COUNT(*) AS total FROM posts")->fetch_assoc()['total'];
-
-// Count total users
-$user_count = $conn->query("SELECT COUNT(*) AS total FROM users")->fetch_assoc()['total'];
-
-// Total Orders
-$res = $conn->query("SELECT COUNT(*) total FROM orders");
-$stats['orders'] = $res->fetch_assoc()['total'];
-
-// Total Revenue (Paid only)
-$res = $conn->query("SELECT SUM(total_price) total FROM orders WHERE status='Paid'");
-$stats['revenue'] = $res->fetch_assoc()['total'] ?? 0;
-
-// Total Users
-$res = $conn->query("SELECT COUNT(*) total FROM users");
-$stats['users'] = $res->fetch_assoc()['total'];
-
-// Orders Today
-$res = $conn->query("
+$stats['today'] = $conn->query("
     SELECT COUNT(*) total FROM orders 
     WHERE DATE(created_at) = CURDATE()
-");
-$stats['today'] = $res->fetch_assoc()['total'];
+")->fetch_assoc()['total'];
+
+$stats['revenue'] = $conn->query("
+    SELECT SUM(total_price) total 
+    FROM orders 
+    WHERE status='Paid'
+")->fetch_assoc()['total'] ?? 0;
+
+
+$stats['products'] = $conn->query("SELECT COUNT(*) total FROM products")->fetch_assoc()['total'];
+$stats['blogs']    = $conn->query("SELECT COUNT(*) total FROM posts")->fetch_assoc()['total'];
+$stats['users']    = $conn->query("SELECT COUNT(*) total FROM users")->fetch_assoc()['total'];
+$stats['orders']   = $conn->query("SELECT COUNT(*) total FROM orders")->fetch_assoc()['total'];
+
+
+// Fetch orders for today with user info
+$sql = "
+    SELECT o.id, u.email AS user_email, o.total_price, o.payment_method, o.status, o.created_at
+    FROM orders o
+    LEFT JOIN users u ON o.user_id = u.id
+    WHERE DATE(o.created_at) = CURDATE()
+    ORDER BY o.created_at DESC
+";
+$result = $conn->query($sql);
+
+require 'inc/header.php';
 ?>
 
 
-<div class="container mt-4">
-    <h2 class="mb-4">Dashboard Summary</h2>
-    <div class="row g-3">
-        <div class="col-md-3">
-            <div class="card p-3 shadow">
-                <i class="bi bi-cart-check fs-1 text-primary me-3"></i>
-                <h6>Total Orders</h6>
-                <h3><?= $stats['orders'] ?></h3>
-            </div>
+<div class="px-2 mt-1 mb-5">
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-4 d-flex align-items-center">
+            <h3 class="mb-0">Dashboard Summary</h3>
         </div>
+    </div>
 
-        <div class="col-md-3">
-            <div class="card p-3 shadow">
-                <h6>Total Revenue</h6>
-                <h3>$<?= number_format($stats['revenue'], 2) ?></h3>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card p-3 shadow">
-                <h6>Total Users</h6>
-                <h3><?= $stats['users'] ?></h3>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card p-3 shadow">
-                <h6>Orders Today</h6>
-                <h3><?= $stats['today'] ?></h3>
-            </div>
-        </div>
-
-
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Products</h5>
-                    <p class="card-text fs-3"><?= $product_count ?></p>
-                    <a href="products.php" class="btn btn-light btn-sm">Manage Products</a>
+    <div class="row">
+        <!-- Left: Today's Orders Report -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-3">
+                <h5 class="p-3">Today's Orders Report (<?= date('Y-m-d') ?>)</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="">
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Price</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($result->num_rows > 0): ?>
+                                <?php while ($row = $result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?= $row['id'] ?></td>
+                                        <td><?= htmlspecialchars($row['user_email']) ?></td>
+                                        <td><?= number_format($row['total_price'], 2) ?></td>
+                                        <td><?= htmlspecialchars($row['payment_method']) ?></td>
+                                        <td>
+                                            <?php
+                                            if ($row['status'] == 'Paid') echo '<span class="badge bg-success">Paid</span>';
+                                            elseif ($row['status'] == 'Pending') echo '<span class="badge bg-warning text-dark">Pending</span>';
+                                            else echo '<span class="badge bg-secondary">' . htmlspecialchars($row['status']) . '</span>';
+                                            ?>
+                                        </td>
+                                        <td><?= date('H:i', strtotime($row['created_at'])) ?></td>
+                                        <td class="text-center">
+                                            <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info me-1">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center">No orders today.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
+        <!-- Right: Summary Cards -->
         <div class="col-md-4">
-            <div class="card text-white bg-success shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Blog Posts</h5>
-                    <p class="card-text fs-3"><?= $blog_count ?></p>
-                    <a href="blog.php" class="btn btn-light btn-sm">Manage Blog</a>
+            <div class="card p-3 shadow d-flex flex-row align-items-center mb-3">
+                <i class="bi bi-calendar-check-fill fs-1 text-danger me-3"></i>
+                <div>
+                    <h6 class="mb-0">Orders Today</h6>
+                    <h3><?= $stats['today'] ?></h3>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card text-white bg-warning shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Users</h5>
-                    <p class="card-text fs-3"><?= $user_count ?></p>
-                    <a href="users.php" class="btn btn-light btn-sm">Manage Users</a>
+            <div class="card p-3 shadow d-flex flex-row align-items-center mb-3">
+                <i class="bi bi-bag-check-fill fs-1 text-primary me-3"></i>
+                <div>
+                    <h6 class="mb-0">Total Orders</h6>
+                    <h3><?= $stats['orders'] ?></h3>
+                </div>
+            </div>
+
+            <div class="card p-3 shadow d-flex flex-row align-items-center mb-3">
+                <i class="bi bi-currency-dollar fs-1 text-success me-3"></i>
+                <div>
+                    <h6 class="mb-0">Total Revenue</h6>
+                    <h3>$<?= number_format($stats['revenue'], 2) ?></h3>
+                </div>
+            </div>
+
+            <div class="card p-3 shadow d-flex flex-row align-items-center mb-3">
+                <i class="bi bi-people-fill fs-1 text-warning me-3"></i>
+                <div>
+                    <h6 class="mb-0">Total Users</h6>
+                    <h3><?= $stats['users'] ?></h3>
                 </div>
             </div>
         </div>

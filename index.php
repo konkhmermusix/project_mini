@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subscribe'])) {
 }
 
 
-include 'inc/header.php';
+require 'inc/header.php';
 ?>
 
 <section>
@@ -115,8 +115,6 @@ include 'inc/header.php';
         <div class="swiper-scrollbar"></div>
     </div>
 </section>
-
-
 
 <section class="p-4">
     <div class="bg-success shadow-sm p-2 mb-2 rounded-1">
@@ -243,7 +241,6 @@ include 'inc/header.php';
         <?php endwhile; ?>
     </div>
 </section>
-
 
 <section class="p-4">
     <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
@@ -475,7 +472,7 @@ include 'inc/header.php';
 
     <div class="row">
         <?php
-        $reviews = $conn->query("SELECT * FROM reviews ORDER BY created_at DESC LIMIT 5");
+        $reviews = $conn->query("SELECT * FROM reviews ORDER BY created_at DESC LIMIT 6");
         while ($review = $reviews->fetch_assoc()):
             $firstLetter = strtoupper(substr($review['user_name'], 0, 1));
         ?>
@@ -539,8 +536,7 @@ include 'inc/header.php';
 </section>
 
 
-
-<?php include 'inc/footer.php'; ?>
+<?php require 'inc/footer.php'; ?>
 
 <script>
     var swiper = new Swiper(".slideshow", {

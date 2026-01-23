@@ -12,6 +12,7 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Soft delete (set status = 0)
 $conn->query("UPDATE categories SET status=0 WHERE id=$id");
+// $conn->query("DELETE FROM categories WHERE id=$id");
 
 header("Location: categories.php");
 exit;

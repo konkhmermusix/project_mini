@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require '../inc/db.php';
 
 // Admin permision
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -9,8 +10,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+
+$conn->query("UPDATE notifications SET is_read = 1 WHERE is_read = 0");
+
 $page = basename($_SERVER['PHP_SELF'], '.php');
 $pageTitle = ucwords(str_replace('-', ' ', $page));
+
+
+$unread = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM notifications
+    WHERE is_read = 0
+")->fetch_assoc();
+
+$notifications = $conn->query("
+    SELECT *
+    FROM notifications
+    ORDER BY created_at DESC
+    LIMIT 10
+");
 
 ?>
 <!DOCTYPE html>
@@ -133,6 +151,57 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                 display: block;
             }
         }
+
+        .form-outline {
+            position: relative;
+        }
+
+        .form-outline input,
+        .form-outline textarea,
+        .form-outline select {
+            height: 45px;
+            padding: 16px 12px;
+            border-radius: 5px;
+        }
+
+        .form-outline label {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            background: #fff;
+            padding: 0 6px;
+            color: #6c757d;
+            font-size: 14px;
+            pointer-events: none;
+            transition: .2s;
+        }
+
+        .form-outline input:focus+label,
+        .form-outline input:not(:placeholder-shown)+label,
+        .form-outline textarea:focus+label,
+        .form-outline textarea:not(:placeholder-shown)+label,
+        .form-outline select:focus+label,
+        .form-outline select:not(:placeholder-shown)+label {
+            top: 0;
+            font-size: 12px;
+            color: #0d6efd;
+        }
+
+        .alert-right {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            z-index: 1055;
+            border-radius: 8px;
+        }
+
+        #preview {
+            display: block;
+            max-height: 200px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -224,23 +293,43 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
             </div>
 
             <div class="d-flex align-items-center flex-wrap gap-2">
+
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown">
+                    <button class="btn btn-outline-secondary position-relative" data-bs-toggle="dropdown">
                         <i class="bi bi-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3
-                            <span class="visually-hidden">unread messages</span>
-                        </span>
+                        <?php if ($unread['total'] > 0): ?>
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                                <?= $unread['total'] ?>
+                            </span>
+                        <?php endif; ?>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" style="width:300px; max-height:250px; overflow-y:auto;">
+
+                    <!-- <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">  </span>-->
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width:320px;">
                         <li class="dropdown-header">Notifications</li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item p-3" href="#">New user registered</a></li>
-                        <li><a class="dropdown-item p-3" href="#">Product updated</a></li>
-                        <li><a class="dropdown-item p-3" href="#">Server rebooted</a></li>
+
+                        <?php if ($notifications->num_rows > 0): ?>
+                            <?php while ($n = $notifications->fetch_assoc()): ?>
+                                <li>
+                                    <a class="dropdown-item p-3 <?php echo $n['is_read'] ? '' : 'fw-bold'; ?>"
+                                        href="<?php echo !empty($n['link']) ? $n['link'] : '#'; ?>">
+                                        <i class="bi bi-bell me-2"></i>
+                                        <?php echo htmlspecialchars($n['message']); ?><br>
+                                        <small class="text-muted"><?php echo $n['created_at']; ?></small>
+                                    </a>
+                                </li>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <li class="dropdown-item text-center text-muted">No notifications</li>
+                        <?php endif; ?>
                     </ul>
+
                 </div>
+
 
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="accountDropdown" data-bs-toggle="dropdown">

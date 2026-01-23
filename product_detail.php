@@ -77,9 +77,7 @@ $stmt->close();
 
 if (!$product) die("Product not found!");
 
-// ==========================
 // Handle Submit Review
-// ==========================
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
 

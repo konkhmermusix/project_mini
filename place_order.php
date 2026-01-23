@@ -1,133 +1,124 @@
 <?php
-session_start();
-require 'inc/db.php';
+require 'inc/header.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
+$order_id = $_GET['order_id'] ?? 0;
+$total_price = $_GET['amount'] ?? 0.00;
+
+if (!$order_id) {
+    die("Invalid order");
 }
 
-// Cart check
-$cart = $_SESSION['cart'] ?? [];
-if (empty($cart)) {
-    include 'inc/header.php';
+// Generate QR Code
+$qr_data = "ORDER:$order_id|AMOUNT:$total_price";
+$qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($qr_data);
 ?>
-    <div class="container mt-5 text-center">
-        <h3 class="mb-3">Your Cart is Empty</h3>
-        <p class="text-muted">You have no items in your cart. <a href="index.php">Go Shopping</a></p>
-        <a href="index.php" class="btn btn-primary mt-3">Browse Products</a>
-    </div>
-<?php
-    include 'inc/footer.php';
-    exit;
-}
 
-// POST data
-$user_id = $_SESSION['user_id'];
-$address = trim($_POST['address'] ?? '');
-$payment_method = $_POST['payment_method'] ?? 'COD';
-$total_price = floatval($_POST['total_price'] ?? 0);
+<div class="container mt-5 mb-5">
+    <div class="card shadow-sm rounded-4 p-4">
+        <h3 class="text-primary fw-bold mb-4 text-center">Scan QR to Pay</h3>
+        <p class="text-center mb-4"><strong>Amount:</strong> $<?= number_format($total_price, 2) ?></p>
 
-// Insert into orders
-$stmt = $conn->prepare("INSERT INTO orders (user_id, total_price, payment_method, address) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("idss", $user_id, $total_price, $payment_method, $address);
-$stmt->execute();
-$order_id = $stmt->insert_id;
-$stmt->close();
-
-// Insert order items
-foreach ($cart as $item) {
-    if (!is_array($item)) continue;
-    if (!isset($item['id'], $item['qty'], $item['price'])) continue;
-    $pid   = (int) $item['id'];
-    $qty   = (int) $item['qty'];
-    $price = (float) $item['price'];
-
-    $stmt = $conn->prepare("
-        INSERT INTO order_items (order_id, product_id, qty, price)
-        VALUES (?, ?, ?, ?)
-    ");
-    $stmt->bind_param("iiid", $order_id, $pid, $qty, $price);
-    $stmt->execute();
-    $stmt->close();
-}
-
-// Payment
-$status = 'Pending';
-if ($payment_method === 'Credit') {
-    $status = 'Paid'; // simulate credit payment success
-}
-$stmt = $conn->prepare("INSERT INTO payments (order_id, amount, method, status) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("idss", $order_id, $total_price, $payment_method, $status);
-$stmt->execute();
-$stmt->close();
-
-// Clear cart
-unset($_SESSION['cart']);
-setcookie('cart', '', time() - 3600, '/');
-
-include 'inc/header.php';
-// Handle payment method
-if ($payment_method === 'QR') {
-    // Show QR
-?>
-    <?php
-    // Assume this is part of place_order.php
-    if ($payment_method === 'QR') {
-    ?>
-        <div class="container my-5">
-            <div class="row">
-                <div class="col-md-4">
+        <div class="row">
+            <!-- QR Code -->
+            <div class="col-md-6 text-center mb-4">
+                <div class="d-inline-block p-3 bg-light rounded-3 shadow-sm mb-3">
+                    <img src="<?= $qr_url ?>" alt="QR Code" class="img-fluid" style="max-width:250px;">
                 </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm rounded-4 p-4 text-center">
-                        <h2 class="text-primary fw-bold mb-3">Scan QR to Pay</h2>
-                        <p class="mb-1"><strong>Order ID:</strong> <?= $order_id ?></p>
-                        <p class="mb-3"><strong>Amount:</strong> $<?= number_format($total_price, 2) ?></p>
-
-                        <div class="d-inline-block p-3 bg-light rounded-3 shadow-sm mb-4">
-
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ORDER:<?= $order_id ?>|AMOUNT:<?= $total_price ?>" alt="QR Code" class="img-fluid">
-                        </div>
-
-                        <p class="text-muted mb-4">Use your banking app to scan the QR code and complete payment.</p>
-
-                        <a href="order_success.php?id=<?= $order_id ?>" class="btn btn-gradient btn-lg px-4 fw-bold">I have paid</a>
-                    </div>
-                </div>
+                <p id="qr-message" class="text-info fw-semibold">
+                    Scan or Save QR using your camera or upload a QR image.
+                </p>
             </div>
-            <div class="col-md-4">
+
+            <!-- Camera Scanner -->
+            <div class="col-md-6 mb-4">
+                <div id="reader" style="width:100%; height:300px; border: 2px dashed #4f46e5; border-radius: 10px;"></div>
             </div>
         </div>
 
-        <style>
-            .btn-gradient {
-                background: linear-gradient(135deg, #4f46e5, #3b82f6);
-                color: #fff;
-                border: none;
-                transition: 0.3s;
-            }
+        <!-- Pay Button -->
+        <form method="POST" action="confirm_payment.php">
+            <input type="hidden" name="order_id" value="<?= $order_id ?>">
+            <button type="submit" id="payBtn" class="btn btn-gradient btn-lg fw-bold" disabled>
+                I have paid
+            </button>
+        </form>
+    </div>
+</div>
 
-            .btn-gradient:hover {
-                background: linear-gradient(135deg, #3b82f6, #4f46e5);
-                color: #fff;
-            }
-        </style>
-        <?php
-
-        require 'inc/footer.php';
-        ?>
-<?php
-        exit;
+<!-- Styles -->
+<style>
+    .btn-gradient {
+        background: linear-gradient(135deg, #4f46e5, #3b82f6);
+        color: #fff;
+        border: none;
+        width: 100%;
+        transition: 0.3s;
     }
-} elseif ($payment_method === 'Credit') {
-    // Credit card payment simulated: redirect to success page
-    header("Location: order_success.php?id=$order_id");
-    exit;
-} else {
-    // COD
-    header("Location: order_success.php?id=$order_id");
-    exit;
-}
 
-?>
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #3b82f6, #4f46e5);
+        color: #fff;
+    }
+
+    #reader {
+        background-color: #f9f9f9;
+    }
+</style>
+
+<!-- SweetAlert for message popup -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const orderId = "<?= $order_id ?>";
+    const amount = "<?= $total_price ?>";
+    const payBtn = document.getElementById('payBtn');
+    const qrMessage = document.getElementById('qr-message');
+
+    function showPopup(title, text, icon = 'info') {
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: icon,
+            confirmButtonColor: '#4f46e5'
+        });
+    }
+
+    function handleScan(decodedText) {
+        if (decodedText === `ORDER:${orderId}|AMOUNT:${amount}`) {
+            payBtn.disabled = false;
+            qrMessage.textContent = "QR Scanned Successfully! You can now click 'I have paid'.";
+            qrMessage.className = "text-success fw-bold";
+            html5QrcodeScanner.clear();
+            showPopup("Success!", "QR code scanned successfully.", "success");
+        } else {
+            qrMessage.textContent = "QR does not match this order. Try again.";
+            qrMessage.className = "text-danger fw-bold";
+            showPopup("Error", "Scanned QR does not match this order.", "error");
+        }
+    }
+
+    // Camera scan
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", {
+            fps: 10,
+            qrbox: 250
+        }
+    );
+    html5QrcodeScanner.render(handleScan);
+
+    // File upload scan
+    document.getElementById('qr-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            Html5Qrcode.scanFile(file, true)
+                .then(decodedText => handleScan(decodedText))
+                .catch(err => {
+                    qrMessage.textContent = "Could not scan QR from image. Try another file.";
+                    qrMessage.className = "text-danger fw-bold";
+                    showPopup("Error", "Could not scan QR from file.", "error");
+                });
+        }
+    });
+</script>
+
+<?php require 'inc/footer.php'; ?>

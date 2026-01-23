@@ -1,5 +1,4 @@
 <?php
-
 require '../inc/db.php';
 session_start();
 // Admin guard
@@ -45,7 +44,7 @@ if (isset($_POST['submit'])) {
     $trending = isset($_POST['trending']) ? 1 : 0;
     $discount = floatval($_POST['discount']);
 
-    $image = $product['image']; // Keep old image by default
+    $image = $product['image'];
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
@@ -68,6 +67,7 @@ if (isset($_POST['submit'])) {
         $stmt->close();
     }
 }
+
 
 require 'inc/header.php';
 
@@ -126,14 +126,13 @@ require 'inc/header.php';
     }
 </style>
 
-
 <?php if (!empty($message)) echo $message; ?>
 
-<div class="container mt-4">
+<div class="px-2 mt-4 mb-5">
     <div class="card shadow-sm mb-3">
         <div class="card-body p-4 d-flex align-items-center">
             <h3 class="mb-0">Edit Product</h3>
-            <a href="products.php" class="btn btn-secondary ms-auto">&larr; Back</a>
+            <a href="products.php" class="btn btn-secondary ms-auto"><i class="bi bi-arrow-left me-2"></i>Back</a>
         </div>
     </div>
 
@@ -199,6 +198,10 @@ require 'inc/header.php';
                     <input type="checkbox" name="trending" class="form-check-input" id="trending" <?= $product['trending'] ? 'checked' : '' ?>>
                     <label class="form-check-label" for="trending">Trending</label>
                 </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="status" <?= $product['status'] ? 'checked' : '' ?>>
+                    <label class="form-check-label">Active</label>
+                </div>
 
                 <div class="mb-3">
                     <input class="form-control" type="file" name="image" accept="image/*" class="form-control" onchange="previewImage(event)">
@@ -209,8 +212,8 @@ require 'inc/header.php';
                     <?php endif; ?>
                 </div>
 
+
                 <button type="submit" class="btn btn-primary" name="submit">Update Product</button>
-                <a href="products.php" class="btn btn-secondary ms-2">Back</a>
             </form>
         </div>
     </div>
@@ -227,4 +230,6 @@ require 'inc/header.php';
     }, 3000);
 </script>
 
-<?php include 'inc/footer.php'; ?>
+<?php
+require 'inc/footer.php';
+?>

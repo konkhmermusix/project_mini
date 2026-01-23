@@ -1,6 +1,6 @@
 <?php
 require 'inc/db.php';
-include 'inc/header.php';
+require 'inc/header.php';
 
 $order_id = intval($_GET['order_id']);
 
@@ -20,4 +20,4 @@ $order = $conn->query("
     I have paid
 </a>
 
-<?php include 'inc/footer.php'; ?>
+<?php require 'inc/footer.php'; ?>

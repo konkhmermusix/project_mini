@@ -19,7 +19,7 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
 <head>
     <meta charset="UTF-8">
     <title><?= $pageTitle ?></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
@@ -143,6 +143,15 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
             font-size: 18px;
         }
 
+        .alert-right {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            z-index: 1055;
+            border-radius: 8px;
+        }
+
         .alert-top-right {
             position: fixed;
             top: 20px;
@@ -150,6 +159,7 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
             z-index: 1050;
             /* Bootstrap modal higher z-index */
             min-width: 250px;
+        }
     </style>
 </head>
 
@@ -188,15 +198,23 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
 
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item me-2">
-                        <div class="input-group">
-                            <input type="text" class="form-control shadow-none" placeholder="search products ">
-                            <a class="btn btn-outline-primary btn-nav shadow-none justify-content-between align-items-center" href="#"><i class="bi bi-search"></i></a>
-                        </div>
+                        <form action="search.php" method="GET" class="input-group">
+                            <input
+                                type="text"
+                                name="q"
+                                class="form-control shadow-sm"
+                                placeholder="Search products"
+                                required>
+                            <button class="btn btn-outline-primary btn-nav shadow-none" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
                     </li>
+
 
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-primary btn-nav position-relative" href="cart.php" id="cartLink">
-                            <i class="bi bi-cart"></i> Cart
+                            <i class="bi bi-cart"></i>
                             <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                 <?= $cartCount ?? 0 ?>
                             </span>
@@ -211,7 +229,7 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                             <ul class="dropdown-menu dropdown-menu-end shadow">
                                 <li><a class="dropdown-item" href="profile.php">Profile</a></li>
                                 <li><a class="dropdown-item" href="my_orders.php">My Orders</a></li>
-                                <li><a class="dropdown-item" href="settings.php">Settings</a></li>
+                                <!-- <li><a class="dropdown-item" href="settings.php">Settings</a></li> -->
                                 <?php if ($role == 'admin'): ?>
                                     <li><a class="dropdown-item" href="dashboard/dashboard.php">Dashboard</a></li>
                                 <?php endif; ?>
@@ -231,4 +249,4 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
         </div>
     </nav>
 
-    <div class="">
+    <div>

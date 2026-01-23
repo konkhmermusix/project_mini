@@ -20,33 +20,44 @@ if (isset($_POST['submit'])) {
         $stmt->execute();
         $stmt->close();
 
-        header("Location: brands.php"); // must be before any HTML output
+        header("Location: brands.php");
         exit;
     } else {
         $message = "Brand name is required!";
     }
 }
 
-require 'inc/header.php'; // move AFTER logic
+require 'inc/header.php';
 ?>
 
-<div class="container mt-4">
-    <h3>Add Brand</h3>
+<?php if ($message): ?>
+    <div class="alert alert-danger"><?= $message ?></div>
+<?php endif; ?>
 
-    <?php if ($message): ?>
-        <div class="alert alert-danger"><?= $message ?></div>
-    <?php endif; ?>
+<div class="px-2 mt-4 mb-5">
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-4 d-flex align-items-center">
+            <h3 class="mb-0">Add Brand</h3>
+            <a href="brands.php" class="btn btn-secondary ms-auto"><i class="bi bi-arrow-left me-2"></i>Back</a>
+        </div>
+    </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form method="POST">
 
-    <form method="POST">
-        <div class="mb-3">
-            <label class="form-label">Brand Name</label>
-            <input type="text" class="form-control" name="name" required>
+                <div class="form-outline mb-3">
+                    <input class="form-control" type="text" name="name" placeholder=" " required>
+                    <label>Brand Name</label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="status" checked>
+                    <label class="form-check-label">Active</label>
+                </div>
+                <button class="btn btn-success" name="submit">Save</button>
+            </form>
         </div>
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="status" checked>
-            <label class="form-check-label">Active</label>
-        </div>
-        <button class="btn btn-success" name="submit">Save</button>
-        <a href="brands.php" class="btn btn-secondary">Back</a>
-    </form>
+    </div>
 </div>
+
+<?php require 'inc/footer.php' ?>

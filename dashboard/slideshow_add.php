@@ -10,7 +10,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $message = '';
 
 if (isset($_POST['submit'])) {
-
     $title       = trim($_POST['title']);
     $description = trim($_POST['description']);
     $link        = trim($_POST['link']);
@@ -62,67 +61,13 @@ if (isset($_POST['submit'])) {
 require 'inc/header.php';
 ?>
 
-<style>
-    .form-outline {
-        position: relative;
-    }
-
-    .form-outline input,
-    .form-outline textarea,
-    .form-outline select {
-        height: 45px;
-        padding: 16px 12px;
-        border-radius: 5px;
-    }
-
-    .form-outline label {
-        position: absolute;
-        top: 50%;
-        left: 12px;
-        transform: translateY(-50%);
-        background: #fff;
-        padding: 0 6px;
-        color: #6c757d;
-        font-size: 14px;
-        pointer-events: none;
-        transition: .2s;
-    }
-
-    .form-outline input:focus+label,
-    .form-outline input:not(:placeholder-shown)+label,
-    .form-outline textarea:focus+label,
-    .form-outline textarea:not(:placeholder-shown)+label,
-    .form-outline select:focus+label,
-    .form-outline select:not(:placeholder-shown)+label {
-        top: 0;
-        font-size: 12px;
-        color: #0d6efd;
-    }
-
-    .alert-right {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        min-width: 300px;
-        z-index: 1055;
-        border-radius: 8px;
-    }
-
-    #preview {
-        display: none;
-        max-height: 200px;
-        margin-top: 10px;
-    }
-</style>
-
-
 <?php if (!empty($message)) echo $message; ?>
 
-<div class="container mt-4">
+<div class="px-2 mt-4 mb-5">
     <div class="card shadow-sm mb-3">
         <div class="card-body p-4 d-flex align-items-center">
-            <h3 class="mb-0">Add Slide</h3>
-            <a href="slideshows.php" class="btn btn-secondary ms-auto">&larr; Back</a>
+            <h3 class="mb-0">Add Slideshow</h3>
+            <a href="slideshows.php" class="btn btn-secondary ms-auto"><i class="bi bi-arrow-left me-2"></i>Back</a>
         </div>
     </div>
     <div class="card shadow-sm mb-4">
@@ -145,10 +90,9 @@ require 'inc/header.php';
                 </div>
 
                 <div class="form-outline mb-3">
-                    <input type="number" name="position" class="form-control" value="0">
+                    <input type="number" name="position" class="form-control">
                     <label>Position</label>
                 </div>
-
 
                 <div class="mb-3">
                     <input class="form-control" type="file" name="image" accept="image/*" class="form-control" onchange="previewImage(event)">
@@ -166,6 +110,8 @@ require 'inc/header.php';
         </div>
     </div>
 </div>
+
+<?php require 'inc/footer.php'; ?>
 
 <script>
     function previewImage(event) {

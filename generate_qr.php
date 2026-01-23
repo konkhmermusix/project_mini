@@ -6,6 +6,15 @@ $total_price = $_GET['total_price'] ?? '0';
 
 $data = "ORDER:{$order_id}|AMOUNT:{$total_price}";
 
+$conn->query("
+   INSERT INTO notifications (message, type, link)
+    VALUES (
+    'Order payment completed',
+    'payment',
+    'order_detail.php?id='.$order_id
+    );
+");
+
 // Output QR code directly
 header('Content-Type: image/png');
 QRcode::png($data);
