@@ -68,9 +68,9 @@
     </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="static/js/bootstrap.bundle.min.js"></script>
+<script src="static/js/swiper-bundle.min.js"></script>
+<script src="static/js/aos.js"></script>
 <script>
     AOS.init({
         duration: 800,
@@ -91,18 +91,14 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Update navbar badge
                     document.getElementById('cartCountBadge').textContent = data.cartCount;
                 } else if (data.login) {
-                    // Redirect to login if not logged in
                     window.location.href = 'login.php';
                 }
             })
             .catch(err => console.error(err));
     });
 </script>
-
-
 <script>
     const slider = document.getElementById('productSlider');
     const slideAmount = 240;
@@ -120,6 +116,29 @@
             behavior: 'smooth'
         });
     }
+</script>
+
+<script src="static/js/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.add-to-cart-form').submit(function(e) {
+            e.preventDefault();
+            var form = $(this);
+            $.ajax({
+                url: 'cart_add_ajax.php',
+                method: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        $('#cartCountBadge').text(res.total);
+                    } else {
+                        alert(res.msg || 'Failed to add cart');
+                    }
+                }
+            });
+        });
+    });
 </script>
 
 </body>

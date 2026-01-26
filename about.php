@@ -4,7 +4,7 @@ require 'inc/header.php';
 ?>
 
 <!-- Page Banner -->
-<div class="py-5 text-center text-white" style="background: linear-gradient(135deg, #4f46e5, #3b82f6);">
+<div class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(67, 67, 81),rgb(70, 124, 62));">
    <div class="container">
       <h1 class="fw-bold mb-2" data-aos="fade-up">About Us</h1>
       <p class="lead" data-aos="fade-up">Learn more about LSTECH and our mission</p>
@@ -14,11 +14,13 @@ require 'inc/header.php';
 <!-- About Content -->
 <div class="container my-5" data-aos="fade-up">
    <div class="row align-items-center">
-      <div class="col-md-6 mb-4 mb-md-0">
-         <img src="static/website/about/.jpg" alt="About Us" class="img-fluid rounded shadow-sm">
+      <div class="col-md-4 mb-4 mb-md-0">
+         <div class="card rounded-2 w-75 h-75">
+            <img src="static/image/about/about-1.jpg" alt="About Us" class="img-fluid rounded shadow-sm">
+         </div>
       </div>
 
-      <div class="col-md-6">
+      <div class="col-md-8">
          <h2 class="fw-bold mb-3">Our Story</h2>
          <p>Welcome to LSTECH, your trusted destination for high-quality smartphones. We focus exclusively on providing the latest and most reliable mobile phones, with a strong commitment to quality, customer satisfaction, and fair pricing.</p>
          <p>Founded in 2026, LSTECH was created with a passion for helping customers find the right smartphone that fits their needs. Through careful research and product selection, we aim to deliver a smooth and secure online shopping experience.</p>

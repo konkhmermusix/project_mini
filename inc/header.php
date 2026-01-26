@@ -20,12 +20,14 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
     <meta charset="UTF-8">
     <title><?= $pageTitle ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="static/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="static/css/aos.css">
+
 
     <style>
         body {
@@ -233,12 +235,10 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
             scroll-behavior: smooth;
             overflow-x: auto;
             scrollbar-width: none;
-            /* Firefox */
         }
 
         .product-slider::-webkit-scrollbar {
             display: none;
-            /* Chrome */
         }
 
         .product-slide {
@@ -260,9 +260,7 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
         .card-img-top {
             width: 100%;
             height: 180px;
-            /* fixed height for all images */
             object-fit: cover;
-            /* crop images to fit */
             object-position: center;
             border-radius: 6px;
             transition: transform 0.3s;
@@ -270,25 +268,6 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
 
         .card-img-top:hover {
             transform: scale(1.05);
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 4px 7px;
-        }
-
-        .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .card-text {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .btn-sm i {
-            margin-right: 3px;
         }
 
         @media (max-width: 768px) {
@@ -303,7 +282,138 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
             }
         }
 
-        
+        .profile-cover {
+            position: relative;
+            height: 280px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+        }
+
+        .cover-bg {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .avatar-wrapper {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 50px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 5px solid #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .3);
+            margin: auto;
+        }
+
+        .profile-buttons {
+            margin-top: 80px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .profile-buttons .btn {
+            flex: 1 1 45%;
+            padding: 10px 0;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+
+        .profile-buttons .btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .table th {
+            width: 160px;
+        }
+
+        .profile-cover {
+            position: relative;
+            height: 260px;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .cover-bg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .avatar-wrapper {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 48px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 6px solid #fff;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, .3);
+            margin: auto;
+        }
+
+        .btn-primary {
+            border-radius: 5px;
+            padding: 10px;
+            font-weight: 500;
+        }
+
+        .form-outline {
+            position: relative;
+        }
+
+        .form-outline input {
+            height: 45px;
+            border-radius: 5px;
+            padding: 16px 12px;
+        }
+
+        .form-outline label {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            background: #fff;
+            padding: 0 6px;
+            color: #6c757d;
+            font-size: 14px;
+            transition: 0.2s ease;
+            pointer-events: none;
+        }
+
+        .form-outline input:focus+label,
+        .form-outline input:not(:placeholder-shown)+label {
+            top: 0;
+            font-size: 12px;
+            color: #0d6efd;
+        }
     </style>
 </head>
 
@@ -360,10 +470,19 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                         <a class="btn btn-outline-primary btn-nav position-relative" href="cart.php" id="cartLink">
                             <i class="bi bi-cart"></i>
                             <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                <?= $cartCount ?? 0 ?>
+                                <?= isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'qty')) : 0 ?>
                             </span>
                         </a>
                     </li>
+
+                    <!-- <a href="cart.php" class="btn btn-outline-primary position-relative">
+                        <i class="bi bi-cart"></i>
+                        <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                           
+                            //  isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'qty')) : 0 
+                    
+                        </span>
+                    </a> -->
 
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown me-2">
@@ -373,7 +492,6 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                             <ul class="dropdown-menu dropdown-menu-end shadow">
                                 <li><a class="dropdown-item" href="profile.php">Profile</a></li>
                                 <li><a class="dropdown-item" href="my_orders.php">My Orders</a></li>
-                                <!-- <li><a class="dropdown-item" href="settings.php">Settings</a></li> -->
                                 <?php if ($role == 'admin'): ?>
                                     <li><a class="dropdown-item" href="dashboard/dashboard.php">Dashboard</a></li>
                                 <?php endif; ?>

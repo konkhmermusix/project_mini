@@ -35,108 +35,8 @@ $gradients = [
 $coverGradient = $gradients[crc32($user['username']) % count($gradients)];
 ?>
 
-<style>
-    .profile-cover {
-        position: relative;
-        height: 280px;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
-    }
-
-    .cover-bg {
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-    }
-
-    .avatar-wrapper {
-        position: absolute;
-        bottom: -60px;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-    }
-
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        color: #fff;
-        font-size: 50px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 5px solid #fff;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, .3);
-        margin: auto;
-    }
-
-    .profile-buttons {
-        margin-top: 80px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
-    }
-
-    .profile-buttons .btn {
-        flex: 1 1 45%;
-        padding: 10px 0;
-        font-weight: 600;
-        border-radius: 8px;
-        transition: transform 0.2s;
-    }
-
-    .profile-buttons .btn:hover {
-        transform: translateY(-3px);
-    }
-
-    .table th {
-        width: 160px;
-    }
-
-    .profile-cover {
-        position: relative;
-        height: 260px;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    .cover-bg {
-        width: 100%;
-        height: 100%;
-    }
-
-    .avatar-wrapper {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-    }
-
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        color: #fff;
-        font-size: 48px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 6px solid #fff;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, .3);
-        margin: auto;
-    }
-</style>
-
 <div class="container my-5">
 
-    <!-- COVER -->
     <div class="profile-cover mb-4">
         <div class="cover-bg" style="background:<?= $coverGradient ?>"></div>
         <div class="avatar-wrapper">
@@ -146,7 +46,6 @@ $coverGradient = $gradients[crc32($user['username']) % count($gradients)];
         </div>
     </div>
 
-    <!-- ALERT MESSAGES -->
     <?php if (isset($_SESSION['success'])): ?>
         <div class="alert alert-success alert-dismissible fade show text-center">
             <?= $_SESSION['success'] ?>
@@ -163,13 +62,11 @@ $coverGradient = $gradients[crc32($user['username']) % count($gradients)];
     <?php unset($_SESSION['error']);
     endif; ?>
 
-    <!-- PROFILE ACTION BUTTONS -->
     <div class="profile-buttons">
-        <a href="profile_edit.php" class="btn btn-primary w-25"><i class="bi bi-pencil-square"></i></a>
-        <a href="profile_cover.php" class="btn btn-secondary">Change Cover</a>
+        <a href="profile_edit.php" class="btn btn-primary w-25"><i class="bi bi-pencil-square"></i> Edit</a>
+        <a href="profile_password.php" class="btn btn-warning w-25"><i class="bi bi-lock"></i> Change Password</a>
     </div>
 
-    <!-- PROFILE INFO -->
     <div class="card shadow-sm mt-4">
         <div class="card-body">
             <h5 class="card-title mb-3">Profile Information</h5>

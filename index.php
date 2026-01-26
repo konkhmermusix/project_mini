@@ -166,8 +166,9 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
+        <div class="bg-secondary shadow-sm p-2 mb-2 rounded-1 d-flex">
             <h4 class="mb-0 text-white">Featured / Popular Products</h4>
+            <a class="btn btn-ms btn-outline-danger ms-auto text-light" href="shop.php">More</a>
         </div>
         <div class="row">
             <?php
@@ -227,15 +228,23 @@ require 'inc/header.php';
                                     View
                                 </a>
 
+
+                                <form class="add-to-cart-form">
+                                    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
+                                    <input type="hidden" name="qty" value="1">
+                                    <button type="submit" class="btn btn-success w-100 btn-sm">Add to Cart</button>
+                                </form>
+
+
                                 <!-- Form ដដែល / no reload logic optional -->
-                                <form method="post" class="w-50">
+                                <!-- <form method="post" class="w-50">
                                     <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                     <input type="hidden" name="qty" value="1">
                                     <button name="add_to_cart"
                                         class="btn btn-success btn-sm w-100">
                                         Add to Cart
                                     </button>
-                                </form>
+                                </form> -->
                             </div>
                         </div>
 
@@ -246,7 +255,7 @@ require 'inc/header.php';
     </div>
 </section>
 
-<section class="p-4">
+<section class="p-4 bg-light">
     <div class="container">
         <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
             <h4 class="mb-0 text-white">Deals / Flash Sales</h4>
@@ -258,7 +267,7 @@ require 'inc/header.php';
             FROM products
             WHERE status = 1 AND cost_price < price
             ORDER BY price DESC
-            LIMIT 8
+            LIMIT 4
         ");
             while ($row = $deals->fetch_assoc()):
                 $discount = 0;
@@ -330,80 +339,73 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
+        <div class="bg-info shadow-sm p-2 mb-4 rounded-1">
             <h4 class="mb-0 text-white">Promotion / Discount</h4>
         </div>
-        <div class="row">
-            <?php
-            $result = $conn->query("SELECT *, (price - cost_price) AS discount_amount FROM products WHERE status = 1 AND cost_price < price ORDER BY discount_amount DESC LIMIT 4 ");
-            while ($row = $result->fetch_assoc()):
-            ?>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm position-relative">
 
-                        <?php
-                        $discount = 0;
-                        if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                            $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
-                        }
-                        ?>
+        <?php
+        // Select 1 random product with discount
+        $result = $conn->query("
+            SELECT *, (price - cost_price) AS discount_amount 
+            FROM products 
+            WHERE status = 1 AND cost_price < price 
+            ORDER BY RAND() 
+            LIMIT 1
+        ");
+        $row = $result->fetch_assoc();
+        if ($row):
+            $discount = 0;
+            if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
+                $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
+            }
+        ?>
 
+            <div class="card mb-4 shadow-sm p-3">
+                <div class="row g-0 align-items-center">
+                    <!-- Text Left -->
+                    <div class="col-md-6">
                         <?php if ($discount > 0): ?>
-                            <span class="badge bg-danger position-absolute top-0 start-0 m-2">
-                                -<?= $discount ?>%
-                            </span>
+                            <span class="badge bg-danger mb-2">-<?= $discount ?>%</span>
                         <?php endif; ?>
 
-                        <?php if (!empty($row['image'])): ?>
-                            <img src="<?= htmlspecialchars($row['image']) ?>"
-                                class="card-img-top"
-                                style="height:200px; object-fit:cover;">
-                        <?php endif; ?>
+                        <h3 class="card-title"><?= htmlspecialchars($row['name']) ?></h3>
+                        <p class="card-text text-muted">
+                            <?= substr(strip_tags($row['description']), 0, 120) ?>...
+                        </p>
 
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
-
-                            <p class="card-text small text-muted">
-                                <?= substr(strip_tags($row['description']), 0, 60) ?>...
+                        <?php if ($row['cost_price'] < $row['price']): ?>
+                            <p class="mb-2">
+                                <span class="text-danger fw-bold">$<?= number_format($row['cost_price'], 2) ?></span>
+                                <del class="text-muted small ms-1">$<?= number_format($row['price'], 2) ?></del>
                             </p>
+                        <?php else: ?>
+                            <p class="fw-bold mb-2">$<?= number_format($row['price'], 2) ?></p>
+                        <?php endif; ?>
 
-                            <?php if ($row['cost_price'] < $row['price']): ?>
-                                <p class="mb-2">
-                                    <span class="text-danger fw-bold">
-                                        $<?= number_format($row['cost_price'], 2) ?>
-                                    </span>
-                                    <del class="text-muted small ms-1">
-                                        $<?= number_format($row['price'], 2) ?>
-                                    </del>
-                                </p>
-                            <?php else: ?>
-                                <p class="fw-bold mb-2">
-                                    $<?= number_format($row['price'], 2) ?>
-                                </p>
-                            <?php endif; ?>
-
-                            <div class="mt-auto d-flex gap-2">
-                                <a href="product_detail.php?id=<?= $row['id'] ?>"
-                                    class="btn btn-outline-primary btn-sm w-50">
-                                    View
-                                </a>
-
-                                <!-- Form ដដែល / no reload logic optional -->
-                                <form method="post" class="w-50">
-                                    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
-                                    <input type="hidden" name="qty" value="1">
-                                    <button name="add_to_cart"
-                                        class="btn btn-success btn-sm w-100">
-                                        Add to Cart
-                                    </button>
-                                </form>
-                            </div>
+                        <div class="d-flex gap-2">
+                            <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
+                                View
+                            </a>
+                            <form method="post">
+                                <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
+                                <input type="hidden" name="qty" value="1">
+                                <button name="add_to_cart" class="btn btn-success">
+                                    Add to Cart
+                                </button>
+                            </form>
                         </div>
+                    </div>
 
+                    <!-- Image Right -->
+                    <div class="col-md-6 text-center">
+                        <?php if (!empty($row['image'])): ?>
+                            <img src="<?= htmlspecialchars($row['image']) ?>" class="img-fluid rounded" style="max-height:250px; object-fit:cover;">
+                        <?php endif; ?>
                     </div>
                 </div>
-            <?php endwhile; ?>
-        </div>
+            </div>
+
+        <?php endif; ?>
     </div>
 </section>
 
@@ -498,58 +500,75 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-warning shadow-sm p-2 mb-2 rounded-1">
+        <div class="bg-warning shadow-sm p-2 mb-4 rounded-1">
             <h4 class="mb-0 text-white">Best Seller Products</h4>
         </div>
-        <div class="row">
-            <?php
-            $result = $conn->query("
-            SELECT * 
-            FROM products 
-            WHERE status = 1 
-            ORDER BY created_at  DESC
-            LIMIT 8
-        ");
-            while ($row = $result->fetch_assoc()):
-            ?>
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm" data-aos="fade-up">
 
-                        <?php if (!empty($row['image'])): ?>
-                            <img src="<?= htmlspecialchars($row['image']) ?>"
-                                class="card-img-top"
-                                style="height:200px; object-fit:cover;">
-                        <?php endif; ?>
+        <div class="swiper products">
+            <div class="swiper-wrapper">
+                <?php
+                $result = $conn->query("
+                    SELECT * FROM products 
+                    WHERE status = 1 
+                    ORDER BY RAND() 
+                    LIMIT 10
+                ");
 
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
+                while ($row = $result->fetch_assoc()):
+                    $discount = 0;
+                    if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
+                        $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
+                    }
+                ?>
+                    <div class="swiper-slide">
+                        <div class="card rounded-0 h-100 shadow-none" style="width:310px;">
+                            <?php if ($discount > 0): ?>
+                                <span class="badge bg-danger position-absolute m-2">-<?= $discount ?>%</span>
+                            <?php endif; ?>
 
-                            <p class="card-text small text-muted">
-                                <?= substr(strip_tags($row['description']), 0, 60) ?>...
-                            </p>
+                            <?php if (!empty($row['image'])): ?>
+                                <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top" style="height:170px; object-fit:cover;">
+                            <?php endif; ?>
 
-                            <p class="fw-bold mb-2">$<?= number_format($row['price'], 2) ?></p>
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
 
-                            <div class="mt-auto d-grid gap-2">
-                                <a href="product_detail.php?id=<?= $row['id'] ?>"
-                                    class="btn btn-outline-primary btn-sm">
-                                    View
-                                </a>
+                                <p class="card-text small text-muted" style="font-size: 12px;">
+                                    <?= substr(strip_tags($row['description']), 0, 60) ?>...
+                                </p>
 
-                                <form method="post">
-                                    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
-                                    <input type="hidden" name="qty" value="1">
-                                    <button name="add_to_cart"
-                                        class="btn btn-success btn-sm w-100">
-                                        Add to Cart
-                                    </button>
-                                </form>
+                                <!-- Price -->
+                                <?php if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']): ?>
+                                    <p class="mb-2 " style="font-size: 16px;">
+                                        <span class="text-danger fw-bold">
+                                            $<?= number_format($row['cost_price'], 2) ?>
+                                        </span>
+                                        <del class="text-muted small ms-1">
+                                            $<?= number_format($row['price'], 2) ?>
+                                        </del>
+                                    </p>
+                                <?php else: ?>
+                                    <p class="fw-bold mb-2" style="font-size: 16px;">
+                                        $<?= number_format($row['price'], 2) ?>
+                                    </p>
+                                <?php endif; ?>
+                                <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary mt-auto">View</a>
+                                <div class="mt-auto d-flex  align-items-stretch">
+                                    <form method="post" class="flex-fill m-0">
+                                        <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
+                                        <input type="hidden" name="qty" value="1">
+                                        <button name="add_to_cart" class="btn btn-success btn-sm w-100">
+                                            Add to Cart
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-
                     </div>
-                </div>
-            <?php endwhile; ?>
+                <?php endwhile; ?>
+            </div>
+            <div class="swiper-button-next products-next"></div>
+            <div class="swiper-button-prev products-prev"></div>
         </div>
     </div>
 </section>
@@ -562,42 +581,44 @@ require 'inc/header.php';
 
         <div class="row">
             <?php
-            $reviews = $conn->query("SELECT * FROM reviews ORDER BY created_at DESC LIMIT 6");
+            $reviews = $conn->query("SELECT * FROM reviews WHERE status=1 ORDER BY created_at DESC LIMIT 4");
             while ($review = $reviews->fetch_assoc()):
                 $firstLetter = strtoupper(substr($review['user_name'], 0, 1));
+                $profileUrl = "profile_user.php?id=" . $review['user_id'];
             ?>
-                <div class="col-md-6 mb-3" data-aos="fade-up">
+                <div class="col-md-6 mb-3">
                     <div class="card p-3 shadow-sm h-100">
-
                         <div class="d-flex align-items-center mb-2">
-                            <!-- Profile -->
-                            <?php if (!empty($review['profile_image'])): ?>
-                                <img src="<?= htmlspecialchars($review['profile_image']) ?>"
-                                    class="review-avatar me-2">
-                            <?php else: ?>
-                                <div class="avatar-text me-2">
-                                    <?= $firstLetter ?>
+                            <a href="<?= $profileUrl ?>" class="d-flex align-items-center text-decoration-none text-dark">
+                                <?php if (!empty($review['profile_image'])): ?>
+                                    <img src="<?= htmlspecialchars($review['profile_image']) ?>"
+                                        class="rounded-circle me-3"
+                                        style="width:50px; height:50px; object-fit:cover;">
+                                <?php else: ?>
+                                    <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3"
+                                        style="width:50px; height:50px; font-weight:bold; font-size:20px;">
+                                        <?= $firstLetter ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div>
+                                    <strong><?= htmlspecialchars($review['user_name']) ?></strong><br>
+                                    <small class="text-warning">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <?= ($i <= intval($review['rating'])) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>'; ?>
+                                        <?php endfor; ?>
+                                    </small>
                                 </div>
-                            <?php endif; ?>
-
-                            <div>
-                                <strong><?= htmlspecialchars($review['user_name']) ?></strong><br>
-                                <small class="text-muted">
-                                    <?= $review['rating'] ?>/5 ⭐
-                                </small>
-                            </div>
+                            </a>
                         </div>
-
-                        <p class="small text-muted mb-0">
-                            <?= htmlspecialchars($review['comment']) ?>
-                        </p>
-
+                        <p class="small text-muted mb-0"><?= htmlspecialchars($review['comment']) ?></p>
                     </div>
                 </div>
             <?php endwhile; ?>
+
         </div>
     </div>
 </section>
+
 
 <section class="p-4 bg-light">
     <div class="container text-center">
@@ -647,5 +668,33 @@ require 'inc/header.php';
             el: ".swiper-scrollbar",
             draggable: true,
         },
+    });
+
+    var productsSwiper = new Swiper('.products', {
+        slidesPerView: 3,
+        spaceBetween: 20,
+        loop: true,
+        autoplay: {
+            delay: 2500,
+            disableOnInteraction: false
+        },
+        navigation: {
+            nextEl: '.products-next',
+            prevEl: '.products-prev'
+        },
+        breakpoints: {
+            0: {
+                slidesPerView: 1
+            },
+            576: {
+                slidesPerView: 2
+            },
+            768: {
+                slidesPerView: 3
+            },
+            992: {
+                slidesPerView: 4
+            }
+        }
     });
 </script>

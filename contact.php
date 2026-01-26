@@ -49,44 +49,6 @@ require 'inc/header.php';
 ?>
 
 
-<style>
-    .btn-primary {
-        border-radius: 5px;
-        padding: 10px;
-        font-weight: 500;
-    }
-
-    .form-outline {
-        position: relative;
-    }
-
-    .form-outline input {
-        height: 45px;
-        border-radius: 5px;
-        padding: 16px 12px;
-    }
-
-    .form-outline label {
-        position: absolute;
-        top: 50%;
-        left: 12px;
-        transform: translateY(-50%);
-        background: #fff;
-        padding: 0 6px;
-        color: #6c757d;
-        font-size: 14px;
-        transition: 0.2s ease;
-        pointer-events: none;
-    }
-
-    .form-outline input:focus+label,
-    .form-outline input:not(:placeholder-shown)+label {
-        top: 0;
-        font-size: 12px;
-        color: #0d6efd;
-    }
-</style>
-
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show alert-top-right" role="alert">
         <?= htmlspecialchars($success_msg) ?>
@@ -100,7 +62,7 @@ require 'inc/header.php';
 <?php endif; ?>
 
 <!-- Page Banner -->
-<div class="py-5 text-center text-white" style="background: linear-gradient(135deg, #4f46e5, #3b82f6);">
+<div class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(255, 234, 4),rgb(8, 39, 89));">
     <div class="container">
         <h1 class="fw-bold mb-2" data-aos="fade-up">Contact Us</h1>
         <p class="lead" data-aos="fade-up">We'd love to hear from you!</p>

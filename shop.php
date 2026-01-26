@@ -120,7 +120,7 @@ require 'inc/header.php';
 ?>
 
 <!-- Page Banner -->
-<section class="py-5 text-center text-white" style="background: linear-gradient(135deg, #4f46e5, #3b82f6);">
+<section class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(192, 191, 212),rgb(71, 2, 2));">
     <div class="container">
         <h1 class="fw-bold mb-2">Shop</h1>
         <p class="lead">Browse our products</p>
@@ -129,17 +129,13 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="row">
-        <!-- Sidebar -->
         <div class="col-md-2">
-            <!-- Search -->
             <div class="card shadow rounded-0 mb-3 p-2">
                 <form method="get" action="shop.php">
                     <input type="text" name="search" class="form-control mb-2" placeholder="Search products..." value="<?= htmlspecialchars($search) ?>">
                     <button type="submit" class="btn btn-primary w-100">Search</button>
                 </form>
             </div>
-
-            <!-- Sorting -->
             <div class="card shadow rounded-0 mb-3 p-2">
                 <select class="form-select" onchange="location=this.value;">
                     <option value="shop.php?<?= http_build_query($_GET) ?>&sort=newest" <?= $sort == 'newest' ? 'selected' : '' ?>>Newest</option>
@@ -177,7 +173,6 @@ require 'inc/header.php';
             </div>
         </div>
 
-        <!-- Products Grid -->
         <div class="col-md-10 mb-4 px-3">
             <div class="row g-3">
                 <?php if ($products && $products->num_rows > 0): ?>
