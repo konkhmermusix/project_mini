@@ -27,7 +27,6 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-
     <style>
         body {
             font-family: 'Kantumruy Pro', sans-serif;
@@ -160,6 +159,151 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
             /* Bootstrap modal higher z-index */
             min-width: 250px;
         }
+
+        .product-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .product-card {
+            background: #fff;
+            width: 220px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+        }
+
+        .discount {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #0d6efd;
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 6px;
+            border-radius: 5px;
+        }
+
+        .product-card h3 {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .price .new {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .price .old {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 13px;
+            margin-left: 5px;
+        }
+
+        .save {
+            color: green;
+            font-size: 13px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .product-slider-wrapper {
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .product-slider {
+            display: flex;
+            gap: 16px;
+            scroll-behavior: smooth;
+            overflow-x: auto;
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .product-slider::-webkit-scrollbar {
+            display: none;
+            /* Chrome */
+        }
+
+        .product-slide {
+            min-width: 220px;
+            max-width: 220px;
+            flex-shrink: 0;
+        }
+
+        .product-card {
+            border-radius: 8px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-img-top {
+            width: 100%;
+            height: 180px;
+            /* fixed height for all images */
+            object-fit: cover;
+            /* crop images to fit */
+            object-position: center;
+            border-radius: 6px;
+            transition: transform 0.3s;
+        }
+
+        .card-img-top:hover {
+            transform: scale(1.05);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 7px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .card-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .btn-sm i {
+            margin-right: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .card-img-top {
+                height: 150px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .card-img-top {
+                height: 130px;
+            }
+        }
+
+        
     </style>
 </head>
 

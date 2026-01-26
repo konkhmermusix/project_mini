@@ -78,14 +78,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Insert payment
-    if ($payment_method === 'Credit') {
+    if ($payment_method === 'CCD') {
 
         $stmt = $conn->prepare("INSERT INTO payments (order_id, amount, method, card_name, card_number, card_expiry, card_cvv, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $paid_status = 'Paid';
         $stmt->bind_param(
             "idssssss",
             $order_id,
-            $total_price, 
+            $total_price,
             $payment_method,
             $card_name,
             $card_number,
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($payment_method === 'QR') {
         header("Location: place_order.php?order_id=$order_id&amount=$total_price");
         exit;
-    } elseif ($payment_method === 'Credit') {
+    } elseif ($payment_method === 'CCD') {
         // Auto paid
         $conn->query("UPDATE payments SET status='Paid' WHERE order_id=$order_id");
         header("Location: order_success.php?id=$order_id");
@@ -199,7 +199,7 @@ require 'inc/header.php';
 <script>
     document.getElementById('payment_method').addEventListener('change', function() {
         const creditDiv = document.getElementById('credit_form');
-        if (this.value === 'Credit') {
+        if (this.value === 'CCD') {
             creditDiv.style.display = 'block';
             creditDiv.querySelectorAll('input').forEach(i => i.required = true);
         } else {

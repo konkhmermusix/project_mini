@@ -56,7 +56,7 @@ require 'inc/header.php';
 
     <?php if (empty($cart)): ?>
         <div class="text-center mt-5 mb-5">
-            <h4>Your cart is empty.</h4>
+            <h4>Your cart is currently empty.</h4>
             <a href="shop.php" class="btn btn-primary mt-3">Browse Products</a>
         </div>
     <?php else: ?>
@@ -84,7 +84,7 @@ require 'inc/header.php';
                                     <img src="<?= htmlspecialchars($item['image']) ?>" class="rounded" style="width:70px; height:70px; object-fit:cover;">
                                 <?php endif; ?>
                             </td>
-                            <td><?= htmlspecialchars($item['name']) ?></td>
+                            <td><a href="product_detail.php?id=<?= $item['id'] ?>" class="text-decoration-none"><?= htmlspecialchars($item['name']) ?></a></td>
                             <td>
                                 <form method="post" class="d-flex">
                                     <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
@@ -105,7 +105,7 @@ require 'inc/header.php';
                         </tr>
                     <?php endforeach; ?>
                     <tr>
-                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                        <td colspan="4" class=""><strong>Total:</strong></td>
                         <td colspan="2"><strong>$<?= number_format($total, 2) ?></strong></td>
                     </tr>
                 </tbody>

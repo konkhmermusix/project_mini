@@ -103,6 +103,24 @@
 </script>
 
 
+<script>
+    const slider = document.getElementById('productSlider');
+    const slideAmount = 240;
+
+    function slideLeft() {
+        slider.scrollBy({
+            left: -slideAmount,
+            behavior: 'smooth'
+        });
+    }
+
+    function slideRight() {
+        slider.scrollBy({
+            left: slideAmount,
+            behavior: 'smooth'
+        });
+    }
+</script>
 
 </body>
 
