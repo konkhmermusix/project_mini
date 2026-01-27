@@ -1,43 +1,57 @@
 <?php
-
 require '../inc/db.php';
 session_start();
 
+// Admin Permission
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit;
 }
 
 $message = '';
+
+// Fetch Brands & Categories
 $brands = $conn->query("SELECT id,name FROM brands WHERE status=1 ORDER BY name");
 $categories = $conn->query("SELECT id,name FROM categories WHERE status=1 ORDER BY name");
 
+// Handle Form Submission
 if (isset($_POST['submit'])) {
     $name = trim($_POST['name']);
     $description = trim($_POST['description']);
-    $price = floatval($_POST['price']);
-    $cost_price = floatval($_POST['cost_price']);
+    $original_price = floatval($_POST['original_price']);
+    $selling_price = floatval($_POST['selling_price']);
     $qty = intval($_POST['qty']);
     $brand_id = intval($_POST['brand_id']);
     $category_id = intval($_POST['category_id']);
     $featured = isset($_POST['featured']) ? 1 : 0;
     $trending = isset($_POST['trending']) ? 1 : 0;
-    $discount = floatval($_POST['discount']);
+    $discount_percent = floatval($_POST['discount_percent']);
+    $status = isset($_POST['status']) ? 1 : 0;
 
+    // Validation
+    if ($selling_price < $original_price) {
+        $message = "<div class='alert alert-danger'>Selling price must be >= original price.</div>";
+    } elseif ($discount_percent < 0 || $discount_percent > 100) {
+        $message = "<div class='alert alert-danger'>Discount percent must be between 0 and 100.</div>";
+    }
+
+    // Handle Image Upload
     $image = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed)) $message = "<div class='alert alert-danger alert-right'>Invalid image type!</div>";
-        else {
+        if (!in_array($ext, $allowed)) {
+            $message = "<div class='alert alert-danger'>Invalid image type!</div>";
+        } else {
             $image = 'uploads/' . time() . '_' . basename($_FILES['image']['name']);
             move_uploaded_file($_FILES['image']['tmp_name'], '../' . $image);
         }
     }
 
+    // Insert into DB
     if (empty($message)) {
-        $stmt = $conn->prepare("INSERT INTO products (name, description, price, cost_price, qty, brand_id, category_id, featured, trending, discount_percent, image) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssddiiiiids", $name, $description, $price, $cost_price, $qty, $brand_id, $category_id, $featured, $trending, $discount, $image);
+        $stmt = $conn->prepare("INSERT INTO products (name, description, original_price, selling_price, qty, brand_id, category_id, featured, trending, discount_percent, image, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("ssddiiiiiids", $name, $description, $original_price, $selling_price, $qty, $brand_id, $category_id, $featured, $trending, $discount_percent, $image, $status);
         $stmt->execute();
         $stmt->close();
         header("Location: products.php");
@@ -48,120 +62,67 @@ if (isset($_POST['submit'])) {
 require 'inc/header.php';
 ?>
 
-<style>
-    .form-outline {
-        position: relative;
-    }
-
-    .form-outline input,
-    .form-outline textarea,
-    .form-outline select {
-        height: 45px;
-        padding: 16px 12px;
-        border-radius: 5px;
-    }
-
-    .form-outline label {
-        position: absolute;
-        top: 50%;
-        left: 12px;
-        transform: translateY(-50%);
-        background: #fff;
-        padding: 0 6px;
-        color: #6c757d;
-        font-size: 14px;
-        pointer-events: none;
-        transition: .2s;
-    }
-
-    .form-outline input:focus+label,
-    .form-outline input:not(:placeholder-shown)+label,
-    .form-outline textarea:focus+label,
-    .form-outline textarea:not(:placeholder-shown)+label,
-    .form-outline select:focus+label,
-    .form-outline select:not(:placeholder-shown)+label {
-        top: 0;
-        font-size: 12px;
-        color: #0d6efd;
-    }
-
-
-
-    #preview {
-        display: none;
-        max-height: 200px;
-        margin-top: 10px;
-    }
-</style>
-
-<?php if (!empty($message)) echo $message; ?>
-
 <div class="px-2 mt-4 mb-5">
     <div class="card shadow-sm mb-3">
-        <div class="card-body p-4 d-flex align-items-center">
+        <div class="card-body d-flex align-items-center">
             <h3 class="mb-0">Add Product</h3>
             <a href="products.php" class="btn btn-secondary ms-auto"><i class="bi bi-arrow-left me-2"></i>Back</a>
         </div>
     </div>
+
+    <?php if ($message) echo $message; ?>
+
     <div class="card shadow-sm mb-4">
-        <div class="card-body p-4">
+        <div class="card-body">
             <form method="POST" enctype="multipart/form-data">
 
-                <div class="form-outline mb-3">
-                    <input class="form-control" type="text" name="name" placeholder=" " required>
-                    <label>Product Name</label>
+                <div class="mb-3">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" name="name" class="form-control" required>
                 </div>
 
-                <div class="form-outline mb-3">
-                    <textarea class="form-control" name="description" rows="4" placeholder=" "></textarea>
-                    <label>Description</label>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="4"></textarea>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3 form-outline">
-                        <input class="form-control" type="number" name="price" step="0.01" placeholder=" " required>
-                        <label>Price ($)</label>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Original Price ($)</label>
+                        <input type="number" name="original_price" step="0.01" class="form-control" required>
                     </div>
-                    <div class="col-md-4 mb-3 form-outline">
-                        <input class="form-control" type="number" name="cost_price" step="0.01" placeholder=" ">
-                        <label>Cost Price ($)</label>
+                    <div class="col-md-4">
+                        <label class="form-label">Selling Price ($)</label>
+                        <input type="number" name="selling_price" step="0.01" class="form-control" required>
                     </div>
-                    <div class="col-md-4 mb-3 form-outline">
-                        <input class="form-control" type="number" name="qty" placeholder=" " required>
-                        <label>Stock Qty</label>
+                    <div class="col-md-4">
+                        <label class="form-label">Stock Qty</label>
+                        <input type="number" name="qty" class="form-control" required>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3 form-outline">
-                        <select class="form-select" name="brand_id" required>
-                            <option value="">Select Brand</option>
-                            <?php
-                            $brands->data_seek(0); // Reset pointer
-                            while ($b = $brands->fetch_assoc()): ?>
-                                <option value="<?= $b['id'] ?>" <?= ($product['brand_id'] ?? '') == $b['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($b['name']) ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
+                <div class="row mb-3">
+                    <div class="col-md-4">
                         <label class="form-label">Brand</label>
-                    </div>
-                    <div class="col-md-4 mb-3 form-outline">
-                        <select class="form-select" name="category_id" required>
-                            <?php
-                            $categories->data_seek(0); // Reset pointer
-                            while ($c = $categories->fetch_assoc()): ?>
-                                <option value="<?= $c['id'] ?>" <?= ($product['category_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($c['name']) ?>
-                                </option>
+                        <select name="brand_id" class="form-select" required>
+                            <option value="">Select Brand</option>
+                            <?php while ($b = $brands->fetch_assoc()): ?>
+                                <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['name']) ?></option>
                             <?php endwhile; ?>
                         </select>
-                        <label class="form-label">Category</label>
                     </div>
-                    <div class="col-md-4 mb-3 form-outline">
-                        <input class="form-control" type="number" name="discount" step="0.01"
-                            value="<?= htmlspecialchars($product['discount_percent'] ?? '') ?>" placeholder=" ">
+                    <div class="col-md-4">
+                        <label class="form-label">Category</label>
+                        <select name="category_id" class="form-select" required>
+                            <option value="">Select Category</option>
+                            <?php while ($c = $categories->fetch_assoc()): ?>
+                                <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Discount (%)</label>
+                        <input type="number" name="discount_percent" step="0.01" class="form-control">
                     </div>
                 </div>
 
@@ -175,16 +136,17 @@ require 'inc/header.php';
                 </div>
 
                 <div class="mb-3">
-                    <input class="form-control" type="file" name="image" accept="image/*" class="form-control" onchange="previewImage(event)">
-                    <img id="preview" src="#" alt="Image Preview" class="img-fluid">
+                    <label class="form-label">Product Image</label>
+                    <input type="file" name="image" class="form-control" accept="image/*" onchange="previewImage(event)">
+                    <img id="preview" src="#" alt="Preview" class="img-fluid mt-2" style="max-height:200px; display:none;">
                 </div>
 
                 <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" name="status" checked>
-                    <label class="form-check-label">Active</label>
+                    <input type="checkbox" name="status" class="form-check-input" id="status" checked>
+                    <label class="form-check-label" for="status">Active</label>
                 </div>
 
-                <button class="btn btn-success" name="submit">Save</button>
+                <button type="submit" name="submit" class="btn btn-success">Save Product</button>
             </form>
         </div>
     </div>
@@ -192,15 +154,13 @@ require 'inc/header.php';
 
 <script>
     function previewImage(event) {
-        var preview = document.getElementById('preview');
+        const preview = document.getElementById('preview');
         preview.src = URL.createObjectURL(event.target.files[0]);
         preview.style.display = 'block';
     }
     setTimeout(() => {
-        document.querySelector('.alert-right')?.remove();
+        document.querySelector('.alert')?.remove();
     }, 3000);
 </script>
 
-<?php
-require 'inc/footer.php';
-?>
+<?php require 'inc/footer.php'; ?>

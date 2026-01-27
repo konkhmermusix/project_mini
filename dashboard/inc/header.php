@@ -336,12 +336,6 @@ $notifications = $conn->query("
                         <i class="bi bi-person-circle"></i> Admin
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="accountDropdown">
-                        <li class="nav-link">
-                            <a class="dropdown-item" href="#">Profile</a>
-                        </li>
-                        <li class="nav-link">
-                            <a class="dropdown-item" href="#">Settings</a>
-                        </li>
                         <li class="">
                             <a class="dropdown-item" href="../index.php">Go Website</a>
                         </li>
@@ -351,9 +345,7 @@ $notifications = $conn->query("
                         <li><a class="dropdown-item text-danger" href="../logout.php">Logout</a></li>
                     </ul>
                 </div>
-
             </div>
         </div>
-
         <!-- Main dashboard content -->
         <div class="container-fluid overflow-hidden">

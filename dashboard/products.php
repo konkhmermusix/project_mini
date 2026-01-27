@@ -2,7 +2,7 @@
 require 'inc/header.php';
 require '../inc/db.php';
 
-// Admin Permision
+// Admin Permission
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit;
@@ -12,6 +12,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $limit = 5;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
+
+// Total records
 $totalResult = $conn->query("SELECT COUNT(*) AS total FROM products WHERE status=1");
 $totalRecords = $totalResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRecords / $limit);
@@ -23,22 +25,27 @@ $sql = "SELECT p.*, b.name AS brand_name, c.name AS category_name
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.status=1
         ORDER BY p.id DESC
-        LIMIT $limit OFFSET $offset";
-$result = $conn->query($sql);
+        LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("ii", $limit, $offset);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <div class="px-2 mt-4 mb-5">
     <div class="card shadow-sm mb-3">
         <div class="card-body p-4 d-flex align-items-center">
-            <h3 class="mb-0">Product</h3>
-            <a class="btn btn-secondary ms-auto" href="product_add.php"><i class="bi bi-plus-circle me-2"></i>Add</a>
+            <h3 class="mb-0">Products</h3>
+            <a class="btn btn-secondary ms-auto" href="product_add.php">
+                <i class="bi bi-plus-circle me-2"></i>Add Product
+            </a>
         </div>
     </div>
 
     <div class="card shadow-sm mb-3">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-active align-middle">
-                <thead class="">
+            <table class="table table-bordered table-hover align-middle">
+                <thead>
                     <tr>
                         <th class="text-center">ID</th>
                         <th>Image</th>
@@ -46,6 +53,7 @@ $result = $conn->query($sql);
                         <th>Brand</th>
                         <th>Category</th>
                         <th>Price</th>
+                        <th>Discount</th>
                         <th>Status</th>
                         <th class="text-center">Action</th>
                     </tr>
@@ -57,25 +65,38 @@ $result = $conn->query($sql);
                                 <td class="text-center"><?= $row['id'] ?></td>
                                 <td>
                                     <?php if (!empty($row['image'])): ?>
-                                        <img src="../<?= htmlspecialchars($row['image']) ?>" style="width:70px;height:auto;" alt="<?= htmlspecialchars($row['name']) ?>">
+                                        <img src="../<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['name']) ?>"
+                                            style="width:70px; height:auto; object-fit:cover;">
                                     <?php endif; ?>
                                 </td>
                                 <td><?= htmlspecialchars($row['name']) ?></td>
                                 <td><?= htmlspecialchars($row['brand_name'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['category_name'] ?? '-') ?></td>
-                                <td>$<?= number_format($row['price'], 2) ?></td>
                                 <td>
-                                    <?= $row['status'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
+                                    $<?= number_format($row['selling_price'], 2) ?>
+                                    <small class="text-muted">(<s>$<?= number_format($row['original_price'], 2) ?></s>)</small>
+                                </td>
+                                <td>
+                                    <?= $row['discount_percent'] > 0 ? $row['discount_percent'] . '%' : '-' ?>
+                                </td>
+                                <td>
+                                    <?= $row['status'] ? '<span class="badge bg-success">Active</span>'
+                                        : '<span class="badge bg-secondary">Inactive</span>' ?>
                                 </td>
                                 <td class="text-center">
-                                    <a class="btn btn-primary btn-sm" href="product_edit.php?id=<?= $row['id'] ?>"><i class="bi bi-pencil-square"></i></a>
-                                    <a class="btn btn-danger btn-sm" href="product_delete.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')"><i class="bi bi-trash"></i></a>
+                                    <a class="btn btn-primary btn-sm" href="product_edit.php?id=<?= $row['id'] ?>">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a class="btn btn-danger btn-sm" href="product_delete.php?id=<?= $row['id'] ?>"
+                                        onclick="return confirm('Are you sure you want to delete this product?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center">No products found.</td>
+                            <td colspan="9" class="text-center">No products found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -102,6 +123,5 @@ $result = $conn->query($sql);
         <?php endif; ?>
     </div>
 </div>
-<?php
-require 'inc/footer.php';
-?>
+
+<?php require 'inc/footer.php'; ?>

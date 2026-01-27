@@ -6,17 +6,28 @@ $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 // POST: Add to Cart
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+
     if (!isset($_SESSION['user_id'])) {
         header("Location: login.php");
         exit;
     }
 
     $product_id = intval($_POST['product_id']);
-    $qty        = intval($_POST['qty']);
-    if ($qty < 1) $qty = 1;
+    $qty        = max(1, intval($_POST['qty']));
 
-    // Fetch product
-    $stmt = $conn->prepare("SELECT id, name, price, qty, image FROM products WHERE id=? AND status=1");
+    /* =========================
+       Fetch product (NEW TABLE)
+    ========================= */
+    $stmt = $conn->prepare("
+        SELECT id, name,
+               original_price,
+               selling_price,
+               discount_percent,
+               qty,
+               image
+        FROM products
+        WHERE id=? AND status=1
+    ");
     $stmt->bind_param("i", $product_id);
     $stmt->execute();
     $product = $stmt->get_result()->fetch_assoc();
@@ -26,30 +37,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         die("Product not found");
     }
 
-    if ($qty > $product['qty']) $qty = $product['qty'];
+    // Stock protection
+    if ($qty > $product['qty']) {
+        $qty = $product['qty'];
+    }
 
     // Init cart
-    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+    }
 
-    // Add/update cart
+    /* =========================
+       Add / Update cart
+    ========================= */
     if (isset($_SESSION['cart'][$product_id])) {
+
         $newQty = $_SESSION['cart'][$product_id]['qty'] + $qty;
-        if ($newQty > $product['qty']) $newQty = $product['qty'];
+        if ($newQty > $product['qty']) {
+            $newQty = $product['qty'];
+        }
         $_SESSION['cart'][$product_id]['qty'] = $newQty;
     } else {
+
         $_SESSION['cart'][$product_id] = [
-            'id' => $product['id'],
-            'name' => $product['name'],
-            'price' => $product['price'],
-            'qty' => $qty,
-            'image' => $product['image']
+            'id'               => $product['id'],
+            'name'             => $product['name'],
+            'original_price'   => $product['original_price'],
+            'selling_price'    => $product['selling_price'], // ✅ DISCOUNTED
+            'discount_percent' => $product['discount_percent'],
+            'qty'              => $qty,
+            'image'            => $product['image']
         ];
     }
 
+    // Save cart to cookie (optional but good)
+    setcookie(
+        'cart',
+        json_encode($_SESSION['cart']),
+        time() + (7 * 24 * 60 * 60),
+        "/"
+    );
+
     $_SESSION['cart_success'] = "Product added to cart!";
-    header("Location: index.php?id=" . $product_id);
+    header("Location: index.php");
     exit;
 }
+
 
 // SUBSCRIBE NEWSLETTER
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subscribe'])) {
@@ -166,85 +199,89 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-secondary shadow-sm p-2 mb-2 rounded-1 d-flex">
+        <div class="bg-secondary shadow-sm p-2 mb-2 rounded-1 d-flex align-items-center">
             <h4 class="mb-0 text-white">Featured / Popular Products</h4>
-            <a class="btn btn-ms btn-outline-danger ms-auto text-light" href="shop.php">More</a>
+            <a class="btn btn-sm btn-outline-light ms-auto" href="shop.php">More</a>
         </div>
+
         <div class="row">
             <?php
             $featured = $conn->query("
-                SELECT * 
+                SELECT *
                 FROM products
-                WHERE status = 1 AND cost_price < price
+                WHERE status = 1
+                  AND featured = 1
+                  AND selling_price <= original_price
                 ORDER BY created_at DESC
                 LIMIT 8
             ");
+
             while ($row = $featured->fetch_assoc()):
+                // Discount calculation
                 $discount = 0;
-                if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                    $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
+                if ($row['selling_price'] < $row['original_price']) {
+                    $discount = round(
+                        (($row['original_price'] - $row['selling_price']) / $row['original_price']) * 100
+                    );
                 }
             ?>
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 shadow-sm position-relative">
 
+                        <!-- Discount Badge -->
                         <?php if ($discount > 0): ?>
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2">
                                 -<?= $discount ?>%
                             </span>
                         <?php endif; ?>
 
+                        <!-- Product Image -->
                         <?php if (!empty($row['image'])): ?>
                             <img src="<?= htmlspecialchars($row['image']) ?>"
                                 class="card-img-top"
-                                style="height:200px; object-fit:cover;">
+                                style="height:200px; object-fit:cover;"
+                                alt="<?= htmlspecialchars($row['name']) ?>">
                         <?php endif; ?>
 
                         <div class="card-body d-flex flex-column">
-                            <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
+                            <h6 class="card-title">
+                                <?= htmlspecialchars($row['name']) ?>
+                            </h6>
 
                             <p class="card-text small text-muted">
                                 <?= substr(strip_tags($row['description']), 0, 60) ?>...
                             </p>
 
-                            <?php if ($row['cost_price'] < $row['price']): ?>
+                            <!-- Price -->
+                            <?php if ($discount > 0): ?>
                                 <p class="mb-2">
                                     <span class="text-danger fw-bold">
-                                        $<?= number_format($row['cost_price'], 2) ?>
+                                        $<?= number_format($row['selling_price'], 2) ?>
                                     </span>
-                                    <del class="text-muted small ms-1">
-                                        $<?= number_format($row['price'], 2) ?>
-                                    </del>
+                                    <small class="text-muted">
+                                        (<s>$<?= number_format($row['original_price'], 2) ?></s>)
+                                    </small>
                                 </p>
                             <?php else: ?>
                                 <p class="fw-bold mb-2">
-                                    $<?= number_format($row['price'], 2) ?>
+                                    $<?= number_format($row['selling_price'], 2) ?>
                                 </p>
                             <?php endif; ?>
 
+                            <!-- Buttons -->
                             <div class="mt-auto d-flex gap-2">
                                 <a href="product_detail.php?id=<?= $row['id'] ?>"
                                     class="btn btn-outline-primary btn-sm w-50">
                                     View
                                 </a>
 
-
-                                <form class="add-to-cart-form">
+                                <form method="post" class="w-50">
                                     <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                     <input type="hidden" name="qty" value="1">
-                                    <button type="submit" class="btn btn-success w-100 btn-sm">Add to Cart</button>
-                                </form>
-
-
-                                <!-- Form ដដែល / no reload logic optional -->
-                                <!-- <form method="post" class="w-50">
-                                    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
-                                    <input type="hidden" name="qty" value="1">
-                                    <button name="add_to_cart"
-                                        class="btn btn-success btn-sm w-100">
-                                        Add to Cart
+                                    <button type="submit" name="add_to_cart" class="btn btn-success btn-sm w-100">
+                                        <i class="bi bi-cart-plus"></i>
                                     </button>
-                                </form> -->
+                                </form>
                             </div>
                         </div>
 
@@ -260,69 +297,81 @@ require 'inc/header.php';
         <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
             <h4 class="mb-0 text-white">Deals / Flash Sales</h4>
         </div>
+
         <div class="row">
             <?php
             $deals = $conn->query("
-            SELECT * 
-            FROM products
-            WHERE status = 1 AND cost_price < price
-            ORDER BY price DESC
-            LIMIT 4
-        ");
+                SELECT *
+                FROM products
+                WHERE status = 1
+                  AND selling_price < original_price
+                ORDER BY (original_price - selling_price) DESC
+                LIMIT 4
+            ");
+
             while ($row = $deals->fetch_assoc()):
+                // Discount calculation
                 $discount = 0;
-                if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                    $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
+                if ($row['selling_price'] < $row['original_price']) {
+                    $discount = round(
+                        (($row['original_price'] - $row['selling_price']) / $row['original_price']) * 100
+                    );
                 }
             ?>
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 shadow-sm position-relative">
 
+                        <!-- Discount Badge -->
                         <?php if ($discount > 0): ?>
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2">
                                 -<?= $discount ?>%
                             </span>
                         <?php endif; ?>
 
+                        <!-- Product Image -->
                         <?php if (!empty($row['image'])): ?>
                             <img src="<?= htmlspecialchars($row['image']) ?>"
                                 class="card-img-top"
-                                style="height:200px; object-fit:cover;">
+                                style="height:200px; object-fit:cover;"
+                                alt="<?= htmlspecialchars($row['name']) ?>">
                         <?php endif; ?>
 
                         <div class="card-body d-flex flex-column">
-                            <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
+                            <h6 class="card-title">
+                                <?= htmlspecialchars($row['name']) ?>
+                            </h6>
 
                             <p class="card-text small text-muted">
                                 <?= substr(strip_tags($row['description']), 0, 60) ?>...
                             </p>
 
-                            <?php if ($row['cost_price'] < $row['price']): ?>
+                            <!-- Price -->
+                            <?php if ($discount > 0): ?>
                                 <p class="mb-2">
                                     <span class="text-danger fw-bold">
-                                        $<?= number_format($row['cost_price'], 2) ?>
+                                        $<?= number_format($row['selling_price'], 2) ?>
                                     </span>
-                                    <del class="text-muted small ms-1">
-                                        $<?= number_format($row['price'], 2) ?>
-                                    </del>
+                                    <small class="text-muted ms-1">
+                                        (<s>$<?= number_format($row['original_price'], 2) ?></s>)
+                                    </small>
                                 </p>
                             <?php else: ?>
                                 <p class="fw-bold mb-2">
-                                    $<?= number_format($row['price'], 2) ?>
+                                    $<?= number_format($row['selling_price'], 2) ?>
                                 </p>
                             <?php endif; ?>
 
+                            <!-- Buttons -->
                             <div class="mt-auto d-flex gap-2">
                                 <a href="product_detail.php?id=<?= $row['id'] ?>"
                                     class="btn btn-outline-primary btn-sm w-50">
                                     View
                                 </a>
 
-                                <!-- Form ដដែល / no reload logic optional -->
                                 <form method="post" class="w-50">
                                     <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                     <input type="hidden" name="qty" value="1">
-                                    <button name="add_to_cart"
+                                    <button type="submit" name="add_to_cart"
                                         class="btn btn-success btn-sm w-100">
                                         Add to Cart
                                     </button>
@@ -346,50 +395,70 @@ require 'inc/header.php';
         <?php
         // Select 1 random product with discount
         $result = $conn->query("
-            SELECT *, (price - cost_price) AS discount_amount 
-            FROM products 
-            WHERE status = 1 AND cost_price < price 
-            ORDER BY RAND() 
+            SELECT *
+            FROM products
+            WHERE status = 1
+              AND selling_price < original_price
+            ORDER BY RAND()
             LIMIT 1
         ");
+
         $row = $result->fetch_assoc();
         if ($row):
             $discount = 0;
-            if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
+            if ($row['selling_price'] < $row['original_price']) {
+                $discount = round(
+                    (($row['original_price'] - $row['selling_price']) / $row['original_price']) * 100
+                );
             }
         ?>
 
             <div class="card mb-4 shadow-sm p-3">
                 <div class="row g-0 align-items-center">
+
                     <!-- Text Left -->
                     <div class="col-md-6">
                         <?php if ($discount > 0): ?>
-                            <span class="badge bg-danger mb-2">-<?= $discount ?>%</span>
+                            <span class="badge bg-danger mb-2">
+                                -<?= $discount ?>%
+                            </span>
                         <?php endif; ?>
 
-                        <h3 class="card-title"><?= htmlspecialchars($row['name']) ?></h3>
+                        <h3 class="card-title">
+                            <?= htmlspecialchars($row['name']) ?>
+                        </h3>
+
                         <p class="card-text text-muted">
                             <?= substr(strip_tags($row['description']), 0, 120) ?>...
                         </p>
 
-                        <?php if ($row['cost_price'] < $row['price']): ?>
+                        <!-- Price -->
+                        <?php if ($discount > 0): ?>
                             <p class="mb-2">
-                                <span class="text-danger fw-bold">$<?= number_format($row['cost_price'], 2) ?></span>
-                                <del class="text-muted small ms-1">$<?= number_format($row['price'], 2) ?></del>
+                                <span class="text-danger fw-bold">
+                                    $<?= number_format($row['selling_price'], 2) ?>
+                                </span>
+                                <small class="text-muted ms-1">
+                                    (<s>$<?= number_format($row['original_price'], 2) ?></s>)
+                                </small>
                             </p>
                         <?php else: ?>
-                            <p class="fw-bold mb-2">$<?= number_format($row['price'], 2) ?></p>
+                            <p class="fw-bold mb-2">
+                                $<?= number_format($row['selling_price'], 2) ?>
+                            </p>
                         <?php endif; ?>
 
                         <div class="d-flex gap-2">
-                            <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
+                            <a href="product_detail.php?id=<?= $row['id'] ?>"
+                                class="btn btn-outline-primary">
                                 View
                             </a>
+
                             <form method="post">
                                 <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                 <input type="hidden" name="qty" value="1">
-                                <button name="add_to_cart" class="btn btn-success">
+                                <button type="submit" name="add_to_cart"
+                                    class="btn btn-success">
                                     Add to Cart
                                 </button>
                             </form>
@@ -399,9 +468,13 @@ require 'inc/header.php';
                     <!-- Image Right -->
                     <div class="col-md-6 text-center">
                         <?php if (!empty($row['image'])): ?>
-                            <img src="<?= htmlspecialchars($row['image']) ?>" class="img-fluid rounded" style="max-height:250px; object-fit:cover;">
+                            <img src="<?= htmlspecialchars($row['image']) ?>"
+                                class="img-fluid rounded"
+                                style="max-height:250px; object-fit:cover;"
+                                alt="<?= htmlspecialchars($row['name']) ?>">
                         <?php endif; ?>
                     </div>
+
                 </div>
             </div>
 
@@ -414,66 +487,80 @@ require 'inc/header.php';
         <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
             <h4 class="mb-0 text-white">New Arrival</h4>
         </div>
+
         <div class="row">
             <?php
-            $result = $conn->query(" SELECT * FROM products WHERE status = 1 ORDER BY created_at DESC LIMIT 8");
+            $result = $conn->query("
+                SELECT *
+                FROM products
+                WHERE status = 1
+                ORDER BY created_at DESC
+                LIMIT 8
+            ");
+
             while ($row = $result->fetch_assoc()):
+                // Discount calculation
+                $discount = 0;
+                if ($row['selling_price'] < $row['original_price']) {
+                    $discount = round(
+                        (($row['original_price'] - $row['selling_price']) / $row['original_price']) * 100
+                    );
+                }
+
+                // New badge (last 5 days)
+                $isNew = (strtotime($row['created_at']) >= strtotime('-5 days'));
             ?>
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 shadow-sm position-relative">
 
-                        <?php
-                        if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                            $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
-                        }
-                        ?>
-
-                        <?php if (!empty($discount)): ?>
+                        <!-- Discount Badge -->
+                        <?php if ($discount > 0): ?>
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2">
                                 -<?= $discount ?>%
                             </span>
-
                         <?php endif; ?>
 
-                        <?php
-                        $isNew = (strtotime($row['created_at']) >= strtotime('-5 days'));
-                        ?>
-
+                        <!-- New Badge -->
                         <?php if ($isNew): ?>
                             <span class="badge bg-success position-absolute top-0 end-0 m-2">
                                 NEW
                             </span>
                         <?php endif; ?>
 
+                        <!-- Image -->
                         <?php if (!empty($row['image'])): ?>
                             <img src="<?= htmlspecialchars($row['image']) ?>"
                                 class="card-img-top"
-                                style="height:200px; object-fit:cover;">
+                                style="height:200px; object-fit:cover;"
+                                alt="<?= htmlspecialchars($row['name']) ?>">
                         <?php endif; ?>
 
                         <div class="card-body d-flex flex-column">
-                            <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
+                            <h6 class="card-title">
+                                <?= htmlspecialchars($row['name']) ?>
+                            </h6>
 
                             <p class="card-text small text-muted">
                                 <?= substr(strip_tags($row['description']), 0, 60) ?>...
                             </p>
 
                             <!-- Price -->
-                            <?php if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']): ?>
+                            <?php if ($discount > 0): ?>
                                 <p class="mb-2">
                                     <span class="text-danger fw-bold">
-                                        $<?= number_format($row['cost_price'], 2) ?>
+                                        $<?= number_format($row['selling_price'], 2) ?>
                                     </span>
-                                    <del class="text-muted small ms-1">
-                                        $<?= number_format($row['price'], 2) ?>
-                                    </del>
+                                    <small class="text-muted ms-1">
+                                        (<s>$<?= number_format($row['original_price'], 2) ?></s>)
+                                    </small>
                                 </p>
                             <?php else: ?>
                                 <p class="fw-bold mb-2">
-                                    $<?= number_format($row['price'], 2) ?>
+                                    $<?= number_format($row['selling_price'], 2) ?>
                                 </p>
                             <?php endif; ?>
 
+                            <!-- Actions -->
                             <div class="mt-auto d-flex gap-2">
                                 <a href="product_detail.php?id=<?= $row['id'] ?>"
                                     class="btn btn-outline-primary btn-sm w-50">
@@ -483,7 +570,7 @@ require 'inc/header.php';
                                 <form method="post" class="w-50">
                                     <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                     <input type="hidden" name="qty" value="1">
-                                    <button name="add_to_cart"
+                                    <button type="submit" name="add_to_cart"
                                         class="btn btn-success btn-sm w-100">
                                         Add to Cart
                                     </button>
@@ -515,19 +602,26 @@ require 'inc/header.php';
                 ");
 
                 while ($row = $result->fetch_assoc()):
+                    // Discount calculation
                     $discount = 0;
-                    if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                        $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
+                    if ($row['selling_price'] < $row['original_price']) {
+                        $discount = round((($row['original_price'] - $row['selling_price']) / $row['original_price']) * 100);
                     }
                 ?>
                     <div class="swiper-slide">
                         <div class="card rounded-0 h-100 shadow-none" style="width:310px;">
+
+                            <!-- Discount Badge -->
                             <?php if ($discount > 0): ?>
                                 <span class="badge bg-danger position-absolute m-2">-<?= $discount ?>%</span>
                             <?php endif; ?>
 
+                            <!-- Product Image -->
                             <?php if (!empty($row['image'])): ?>
-                                <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top" style="height:170px; object-fit:cover;">
+                                <img src="<?= htmlspecialchars($row['image']) ?>"
+                                    class="card-img-top"
+                                    style="height:170px; object-fit:cover;"
+                                    alt="<?= htmlspecialchars($row['name']) ?>">
                             <?php endif; ?>
 
                             <div class="card-body d-flex flex-column">
@@ -538,22 +632,24 @@ require 'inc/header.php';
                                 </p>
 
                                 <!-- Price -->
-                                <?php if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']): ?>
-                                    <p class="mb-2 " style="font-size: 16px;">
+                                <?php if ($discount > 0): ?>
+                                    <p class="mb-2" style="font-size: 16px;">
                                         <span class="text-danger fw-bold">
-                                            $<?= number_format($row['cost_price'], 2) ?>
+                                            $<?= number_format($row['selling_price'], 2) ?>
                                         </span>
-                                        <del class="text-muted small ms-1">
-                                            $<?= number_format($row['price'], 2) ?>
-                                        </del>
+                                        <small class="text-muted ms-1">
+                                            (<s>$<?= number_format($row['original_price'], 2) ?></s>)
+                                        </small>
                                     </p>
                                 <?php else: ?>
                                     <p class="fw-bold mb-2" style="font-size: 16px;">
-                                        $<?= number_format($row['price'], 2) ?>
+                                        $<?= number_format($row['selling_price'], 2) ?>
                                     </p>
                                 <?php endif; ?>
+
+                                <!-- Actions -->
                                 <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary mt-auto">View</a>
-                                <div class="mt-auto d-flex  align-items-stretch">
+                                <div class="mt-2 d-flex align-items-stretch">
                                     <form method="post" class="flex-fill m-0">
                                         <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                         <input type="hidden" name="qty" value="1">
@@ -567,11 +663,14 @@ require 'inc/header.php';
                     </div>
                 <?php endwhile; ?>
             </div>
+
+            <!-- Swiper Navigation -->
             <div class="swiper-button-next products-next"></div>
             <div class="swiper-button-prev products-prev"></div>
         </div>
     </div>
 </section>
+
 
 <section class="p-4">
     <div class="container">
@@ -618,7 +717,6 @@ require 'inc/header.php';
         </div>
     </div>
 </section>
-
 
 <section class="p-4 bg-light">
     <div class="container text-center">

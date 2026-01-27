@@ -3,7 +3,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Example user data
 $username = $_SESSION['username'] ?? 'Guest';
 $role = $_SESSION['role'] ?? '';
 $firstLetter = strtoupper($username[0] ?? 'G');
@@ -19,7 +18,8 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
 <head>
     <meta charset="UTF-8">
     <title><?= $pageTitle ?></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="static/image/favicon/icon.png" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -27,7 +27,6 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
     <link rel="stylesheet" href="static/bootstrap-icons/bootstrap-icons.min.css">
     <link rel="stylesheet" href="static/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="static/css/aos.css">
-
 
     <style>
         body {
@@ -428,7 +427,7 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 text-center">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                     <li class="nav-item me-3">
                         <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'index.php') echo 'active'; ?>" href="index.php">
                             Home
@@ -453,18 +452,10 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item me-2">
                         <form action="search.php" method="GET" class="input-group">
-                            <input
-                                type="text"
-                                name="q"
-                                class="form-control shadow-sm"
-                                placeholder="Search products"
-                                required>
-                            <button class="btn btn-outline-primary btn-nav shadow-none" type="submit">
-                                <i class="bi bi-search"></i>
-                            </button>
+                            <input type="text" name="q" class="form-control shadow-sm" placeholder="Search products" required>
+                            <button class="btn btn-outline-primary btn-nav shadow-none" type="submit"><i class="bi bi-search"></i></button>
                         </form>
                     </li>
-
 
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-primary btn-nav position-relative" href="cart.php" id="cartLink">
@@ -475,17 +466,8 @@ $pageTitle = ucwords(str_replace('-', ' ', $page));
                         </a>
                     </li>
 
-                    <!-- <a href="cart.php" class="btn btn-outline-primary position-relative">
-                        <i class="bi bi-cart"></i>
-                        <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                           
-                            //  isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'qty')) : 0 
-                    
-                        </span>
-                    </a> -->
-
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <li class="nav-item dropdown me-2">
+                        <li class="nav-item dropdown me-2 d-flex">
                             <a class="btn btn-nav avatar-circle dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <?= $firstLetter ?>
                             </a>

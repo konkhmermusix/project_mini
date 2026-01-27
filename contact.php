@@ -69,7 +69,6 @@ require 'inc/header.php';
     </div>
 </div>
 
-<!-- Contact Form & Info -->
 <div class="container my-5">
     <div class="row">
         <div class="container" data-aos="fade-up">

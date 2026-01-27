@@ -35,11 +35,11 @@ $sql = "
     WHERE DATE(o.created_at) = CURDATE()
     ORDER BY o.created_at DESC
 ";
+
 $result = $conn->query($sql);
 
 require 'inc/header.php';
 ?>
-
 
 <div class="px-2 mt-1 mb-5">
     <div class="card shadow-sm mb-3">
@@ -49,9 +49,8 @@ require 'inc/header.php';
     </div>
 
     <div class="row">
-        <!-- Left: Today's Orders Report -->
         <div class="col-md-8">
-            <div class="card shadow-sm mb-3">
+            <div class="card shadow mb-3">
                 <h5 class="p-3">Today's Orders Report (<?= date('Y-m-d') ?>)</h5>
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered">
@@ -72,7 +71,7 @@ require 'inc/header.php';
                                     <tr>
                                         <td><?= $row['id'] ?></td>
                                         <td><?= htmlspecialchars($row['user_email']) ?></td>
-                                        <td><?= number_format($row['total_price'], 2) ?></td>
+                                        <td>$ <?= number_format($row['total_price'], 2) ?></td>
                                         <td><?= htmlspecialchars($row['payment_method']) ?></td>
                                         <td>
                                             <?php
@@ -100,7 +99,6 @@ require 'inc/header.php';
             </div>
         </div>
 
-        <!-- Right: Summary Cards -->
         <div class="col-md-4">
             <div class="card p-3 shadow d-flex flex-row align-items-center mb-3">
                 <i class="bi bi-calendar-check-fill fs-1 text-danger me-3"></i>
@@ -137,4 +135,4 @@ require 'inc/header.php';
     </div>
 </div>
 
-<?php include 'inc/footer.php'; ?>
+<?php require 'inc/footer.php'; ?>

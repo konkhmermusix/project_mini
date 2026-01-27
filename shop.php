@@ -2,12 +2,14 @@
 session_start();
 require 'inc/db.php';
 
+
+// Initialize cart
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
+// Add to cart logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
-
     $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
     $qty = isset($_POST['qty']) ? intval($_POST['qty']) : 1;
 
@@ -17,8 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         exit;
     }
 
-    // Fetch product details from DB
-    $stmt = $conn->prepare("SELECT id, name, price, image FROM products WHERE id=? AND status=1");
+    $stmt = $conn->prepare("SELECT id, name, selling_price, image FROM products WHERE id=? AND status=1");
     $stmt->bind_param("i", $product_id);
     $stmt->execute();
     $product = $stmt->get_result()->fetch_assoc();
@@ -30,30 +31,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         exit;
     }
 
-    // Initialize cart if not exist
-    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
-
-    // Initialize cart item if not exist
     if (!isset($_SESSION['cart'][$product_id])) {
         $_SESSION['cart'][$product_id] = [
             'id' => $product['id'],
             'name' => $product['name'],
-            'price' => $product['price'],
+            'price' => $product['selling_price'],
             'qty' => 0,
             'image' => $product['image'],
         ];
     }
 
-    // Update quantity
     $_SESSION['cart'][$product_id]['qty'] += $qty;
-
     $_SESSION['cart_success'] = "Product added to cart!";
     header("Location: " . $_SERVER['REQUEST_URI']);
     exit;
 }
-// ============================
-// Filters, Search, Sorting, Pagination
-// ============================
+
+// Filters, search, sort, pagination
 $category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
 $brand_id    = isset($_GET['brand_id']) ? intval($_GET['brand_id']) : 0;
 $search      = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -62,7 +56,7 @@ $limit       = 16;
 $page        = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset      = ($page - 1) * $limit;
 
-$where = "WHERE status = 1";
+$where = "WHERE status=1";
 $params = [];
 $types = "";
 
@@ -86,11 +80,11 @@ if ($search !== '') {
 
 // Sorting
 $order = "ORDER BY created_at DESC";
-if ($sort === 'price_asc') $order = "ORDER BY cost_price ASC";
-if ($sort === 'price_desc') $order = "ORDER BY cost_price DESC";
+if ($sort === 'price_asc') $order = "ORDER BY selling_price ASC";
+if ($sort === 'price_desc') $order = "ORDER BY selling_price DESC";
 if ($sort === 'newest') $order = "ORDER BY created_at DESC";
 
-// Total Items
+// Total items
 $totalSql = "SELECT COUNT(*) AS total FROM products $where";
 $stmtTotal = $conn->prepare($totalSql);
 if ($types) $stmtTotal->bind_param($types, ...$params);
@@ -99,10 +93,9 @@ $totalItems = $stmtTotal->get_result()->fetch_assoc()['total'];
 $totalPages = ceil($totalItems / $limit);
 $stmtTotal->close();
 
-// Fetch Products
+// Fetch products
 $productSql = "SELECT * FROM products $where $order LIMIT ?, ?";
 $stmt = $conn->prepare($productSql);
-
 if ($types) {
     $paramsFull = $params;
     $paramsFull[] = $offset;
@@ -112,7 +105,6 @@ if ($types) {
 } else {
     $stmt->bind_param("ii", $offset, $limit);
 }
-
 $stmt->execute();
 $products = $stmt->get_result();
 
@@ -130,12 +122,15 @@ require 'inc/header.php';
 <section class="p-4">
     <div class="row">
         <div class="col-md-2">
+            <!-- Search -->
             <div class="card shadow rounded-0 mb-3 p-2">
                 <form method="get" action="shop.php">
                     <input type="text" name="search" class="form-control mb-2" placeholder="Search products..." value="<?= htmlspecialchars($search) ?>">
                     <button type="submit" class="btn btn-primary w-100">Search</button>
                 </form>
             </div>
+
+            <!-- Sort -->
             <div class="card shadow rounded-0 mb-3 p-2">
                 <select class="form-select" onchange="location=this.value;">
                     <option value="shop.php?<?= http_build_query($_GET) ?>&sort=newest" <?= $sort == 'newest' ? 'selected' : '' ?>>Newest</option>
@@ -144,6 +139,7 @@ require 'inc/header.php';
                 </select>
             </div>
 
+            <!-- Categories -->
             <h5 class="card p-3 shadow rounded-0 bg-primary text-white">Categories</h5>
             <div class="card shadow rounded-0 mb-3">
                 <div class="p-1">
@@ -158,6 +154,7 @@ require 'inc/header.php';
                 </div>
             </div>
 
+            <!-- Brands -->
             <h5 class="card p-3 shadow rounded-0 bg-primary text-white">Brands</h5>
             <div class="card shadow rounded-0 mb-3">
                 <div class="p-1">
@@ -177,10 +174,7 @@ require 'inc/header.php';
             <div class="row g-3">
                 <?php if ($products && $products->num_rows > 0): ?>
                     <?php while ($row = $products->fetch_assoc()):
-                        $discount = 0;
-                        if (!empty($row['cost_price']) && $row['cost_price'] < $row['price']) {
-                            $discount = round((($row['price'] - $row['cost_price']) / $row['price']) * 100);
-                        }
+                        $discount = !empty($row['discount_percent']) ? round($row['discount_percent']) : 0;
                     ?>
                         <div class="col-md-3 col-sm-6">
                             <div class="card shadow-sm h-100 position-relative">
@@ -198,13 +192,12 @@ require 'inc/header.php';
 
                                     <!-- Price -->
                                     <p class="mb-2">
-                                        <span class="fw-bold text-success">$<?= number_format($row['cost_price'], 2) ?></span>
-                                        <?php if ($discount > 0): ?>
-                                            <del class="text-muted small ms-1">$<?= number_format($row['price'], 2) ?></del>
+                                        <span class="fw-bold text-success">$<?= number_format($row['selling_price'], 2) ?></span>
+                                        <?php if ($discount > 0 && !empty($row['original_price'])): ?>
+                                            <del class="text-muted small ms-1">$<?= number_format($row['original_price'], 2) ?></del>
                                         <?php endif; ?>
                                     </p>
 
-                                    <!-- Buttons -->
                                     <div class="mt-auto d-flex gap-2 mb-2">
                                         <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm w-100">
                                             View
@@ -218,8 +211,6 @@ require 'inc/header.php';
                                             <i class="bi bi-cart-plus"></i> Add to Cart
                                         </button>
                                     </form>
-
-
                                 </div>
                             </div>
                         </div>
@@ -236,10 +227,13 @@ require 'inc/header.php';
                     $query = $_GET;
                     unset($query['page']);
                     $baseUrl = 'shop.php?' . http_build_query($query);
-                    ?>
 
-                    <?php if ($page > 1): ?>
-                        <li class="page-item"><a class="page-link" href="<?= $baseUrl ?>&page=<?= ($page - 1) ?>">Previous</a></li>
+                    // Ensure $page is int
+                    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+
+                    if ($page > 1):
+                    ?>
+                        <li class="page-item"><a class="page-link" href="<?= $baseUrl ?>&page=<?= $page - 1 ?>">Previous</a></li>
                     <?php endif; ?>
 
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
@@ -249,7 +243,7 @@ require 'inc/header.php';
                     <?php endfor; ?>
 
                     <?php if ($page < $totalPages): ?>
-                        <li class="page-item"><a class="page-link" href="<?= $baseUrl ?>&page=<?= ($page + 1) ?>">Next</a></li>
+                        <li class="page-item"><a class="page-link" href="<?= $baseUrl ?>&page=<?= $page + 1 ?>">Next</a></li>
                     <?php endif; ?>
 
                 </ul>
@@ -258,4 +252,4 @@ require 'inc/header.php';
     </div>
 </section>
 
-<?php include 'inc/footer.php'; ?>
+<?php require 'inc/footer.php'; ?>

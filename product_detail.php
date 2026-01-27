@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
     $qty = max(1, intval($_POST['qty']));
 
-    $stmt = $conn->prepare("SELECT id, name, price, qty, image, cost_price FROM products WHERE id=? AND status=1");
+    $stmt = $conn->prepare("SELECT id, name, selling_price, qty, image, original_price FROM products WHERE id=? AND status=1");
     $stmt->bind_param("i", $productId);
     $stmt->execute();
     $productCart = $stmt->get_result()->fetch_assoc();
@@ -35,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         $_SESSION['cart'][$productId] = [
             'id' => $productCart['id'],
             'name' => $productCart['name'],
-            'price' => $productCart['price'],
+            'price' => $productCart['selling_price'],
             'qty' => $qty,
             'image' => $productCart['image'],
-            'cost_price' => $productCart['cost_price']
+            'original_price' => $productCart['original_price']
         ];
     }
 
@@ -75,16 +75,27 @@ $rateStmt->close();
 $avgRating = round($rate['avg_rating'], 1);
 $totalReviews = $rate['total_reviews'];
 
-// Check if user already reviewed
 $userReviewed = false;
-if (isset($_SESSION['user_id'])) {
-    $chk = $conn->prepare("SELECT id FROM reviews WHERE product_id=? AND user_id=?");
-    $chk->bind_param("ii", $productId, $_SESSION['user_id']);
-    $chk->execute();
-    $chk->store_result();
-    $userReviewed = $chk->num_rows > 0;
-    $chk->close();
+// Check if user already reviewed
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
+    $rating = intval($_POST['rating']);
+    $comment = trim($_POST['comment']);
+    $userId = $_SESSION['user_id'] ?? 0;
+    $productId = intval($_POST['product_id']);
+
+    if ($userId && $rating > 0 && !empty($comment)) {
+        $stmt = $conn->prepare("INSERT INTO reviews (product_id,user_id,rating,comment,status,created_at) VALUES (?,?,?,?,1,NOW())");
+        $stmt->bind_param("iiis", $productId, $userId, $rating, $comment);
+        $stmt->execute();
+        $stmt->close();
+        $_SESSION['review_success'] = "Review submitted!";
+        header("Location: product_detail.php?id=$productId");
+        exit;
+    } else {
+        $error = "Please provide rating and comment.";
+    }
 }
+
 
 require 'inc/header.php';
 ?>
@@ -92,13 +103,14 @@ require 'inc/header.php';
 <section class="py-5">
     <div class="container">
         <div class="row g-4">
+            <!-- Product Image -->
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <div class="col-md-12">
-                        <img src="<?= htmlspecialchars($product['image']) ?>" class="img-fluid rounded shadow" style="height:400px; object-fit:cover;">
-                    </div>
+                    <img src="<?= htmlspecialchars($product['image']) ?>" class="img-fluid rounded shadow" style="height:400px; object-fit:cover;">
                 </div>
             </div>
+
+            <!-- Product Info -->
             <div class="col-md-6 d-flex flex-column">
                 <h2 class="fw-bold"><?= htmlspecialchars($product['name']) ?></h2>
                 <p class="text-muted mb-2">
@@ -111,21 +123,23 @@ require 'inc/header.php';
                     <?php endfor; ?>
                     <small class="text-muted">(<?= $totalReviews ?> reviews)</small>
                 </div>
+
                 <?php
+                // Discount / Final Price
                 $discount = $product['discount_percent'] ?? 0;
-                $finalPrice = $product['price'] - ($product['price'] * $discount / 100);
+                $finalPrice = $product['selling_price'];
                 ?>
                 <div class="mb-3">
                     <h3 class="text-danger">
                         $<?= number_format($finalPrice, 2) ?>
                         <?php if ($discount > 0): ?>
-                            <small class="text-muted text-decoration-line-through">
-                                $<?= number_format($product['price'], 2) ?>
-                            </small>
+                            <small class="text-muted"><s>$<?= number_format($product['original_price'], 2) ?></s></small>
                             <span class="badge bg-danger"><?= $discount ?>% OFF</span>
                         <?php endif; ?>
                     </h3>
                 </div>
+
+                <!-- Add to Cart -->
                 <div class="mb-4">
                     <?php if ($product['qty'] > 0): ?>
                         <form method="post" class="d-flex align-items-center gap-2">
@@ -140,6 +154,7 @@ require 'inc/header.php';
             </div>
         </div>
 
+        <!-- Tabs: Description & Reviews -->
         <div class="row mt-5">
             <div class="col-12">
                 <ul class="nav nav-tabs" id="productTab" role="tablist">
@@ -230,6 +245,7 @@ require 'inc/header.php';
     </div>
 </section>
 
+
 <!-- Related Products -->
 <section class="py-5">
     <div class="container">
@@ -246,42 +262,62 @@ require 'inc/header.php';
 
                 <?php
                 $stmt = $conn->prepare("
-                SELECT id, name, price, cost_price, image, created_at
-                FROM products
-                WHERE status=1 AND category_id=? AND id!=?
-                ORDER BY created_at DESC
-                LIMIT 16
-            ");
+                    SELECT id, name, original_price, selling_price, discount_percent, image, created_at
+                    FROM products
+                    WHERE status=1 AND category_id=? AND id!=?
+                    ORDER BY created_at DESC
+                    LIMIT 16
+                ");
                 $stmt->bind_param("ii", $category_id, $productId);
                 $stmt->execute();
                 $result = $stmt->get_result();
 
-                // Fallback
+                // Fallback if no related products in same category
                 if ($result->num_rows == 0) {
                     $stmt = $conn->prepare("
-                    SELECT id,name,price,image
-                    FROM products
-                    WHERE status=1 AND id!=?
-                    ORDER BY created_at DESC
-                    LIMIT 16
-                ");
+                        SELECT id, name, original_price, selling_price, discount_percent, image, created_at
+                        FROM products
+                        WHERE status=1 AND id!=?
+                        ORDER BY created_at DESC
+                        LIMIT 16
+                    ");
                     $stmt->bind_param("i", $productId);
                     $stmt->execute();
                     $result = $stmt->get_result();
                 }
 
                 while ($row = $result->fetch_assoc()):
+                    $discount = $row['discount_percent'] ?? 0;
+                    $finalPrice = $row['selling_price'];
                 ?>
 
                     <div class="product-slide">
                         <div class="card h-100 shadow-sm position-relative">
+
+                            <!-- NEW badge -->
                             <?php if (strtotime($row['created_at']) >= strtotime('-5 days')): ?>
                                 <span class="badge bg-success position-absolute top-0 end-0 m-2">NEW</span>
                             <?php endif; ?>
+
+                            <!-- Discount badge -->
+                            <?php if ($discount > 0): ?>
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-2">-<?= $discount ?>%</span>
+                            <?php endif; ?>
+
+                            <!-- Product Image -->
                             <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top" style="height:180px;object-fit:cover;">
+
                             <div class="card-body text-center">
                                 <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
-                                <span class="text-danger fw-bold">$<?= number_format($row['price'], 2) ?></span>
+
+                                <!-- Price -->
+                                <p class="mb-1">
+                                    <span class="text-danger fw-bold">$<?= number_format($finalPrice, 2) ?></span>
+                                    <?php if ($discount > 0): ?>
+                                        <small class="text-muted"><s>$<?= number_format($row['original_price'], 2) ?></s></small>
+                                    <?php endif; ?>
+                                </p>
+
                                 <div class="card-footer">
                                     <div class="mt-auto d-flex">
                                         <a href="product_detail.php?id=<?= $row['id'] ?>"
@@ -304,6 +340,7 @@ require 'inc/header.php';
                     </div>
 
                 <?php endwhile; ?>
+
             </div>
         </div>
     </div>
