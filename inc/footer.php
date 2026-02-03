@@ -1,7 +1,7 @@
 </div>
 <img src="static/image/website/image_footer.webp" alt="" width="100%" class="text-primary">
 <!-- Footer -->
-<footer style="background: linear-gradient(135deg,rgb(129, 128, 152),rgb(76, 160, 245)); color: white;" class="pt-5 pb-3 text-white">
+<footer style="background: linear-gradient(135deg,rgb(33, 32, 60),rgb(73, 102, 131)); color: white;" class="pt-5 pb-3 text-white">
     <div class="container">
         <div class="row">
 
@@ -50,8 +50,8 @@
             <!-- Contact / Social -->
             <div class="col-md-3 mb-4">
                 <h4 class="fw-bold">Contact Us</h4>
-                <p>Email: lstech26@myshop.com</p>
-                <p>Phone: +885 964 301 974</p>
+                <p>Phone: <a href="tel:+885964301974" class="text-decoration-none text-white">+885 964 301 974</a></p>
+                <p>Email: <a href="mailto:lstech26@shop.com" class="text-decoration-none  text-white">lstech26@shop.com</a></p>
                 <div class="d-flex gap-2 mt-2">
                     <a href="https://web.facebook.com/lstechcambodia/" class="me-2 text-decoration-none text-white"><i class="bi bi-facebook fs-4"></i></a>
                     <a href="https://t.me/+eAa1Nx77HxM1MTg1" class="me-2 text-decoration-none text-white"><i class="bi bi-telegram fs-4"></i></a>

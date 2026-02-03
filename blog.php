@@ -43,15 +43,56 @@ $countResult = $conn->query("
 ");
 $totalPosts = $countResult->fetch_assoc()['total'];
 $totalPages = ceil($totalPosts / $limit);
+
+
+$breadcrumb = [
+    ['title' => 'Blog']
+];
+
+
+
 ?>
 
 <!-- Page Banner -->
 <section class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(0, 210, 154),rgb(180, 114, 156));">
     <div class="container">
-        <h1 class="fw-bold mb-2">Blog</h1>
-        <p class="lead">Latest news and updates from our store</p>
+        <h1 class="fw-bold mb-2" data-aos="fade-up">Blog</h1>
+        <p class="lead" data-aos="fade-up">Latest news and updates from our store</p>
     </div>
 </section>
+
+<section class="p-4">
+    <?php
+    $breadcrumb = $breadcrumb ?? [];
+    ?>
+    <?php if (!empty($breadcrumb)): ?>
+        <nav aria-label="breadcrumb" class="bg-light border-bottom">
+            <div class="container py-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="index.php">Home</a>
+                    </li>
+
+                    <?php foreach ($breadcrumb as $item): ?>
+                        <?php if (!empty($item['url'])): ?>
+                            <li class="breadcrumb-item">
+                                <a href="<?= $item['url'] ?>">
+                                    <?= htmlspecialchars($item['title']) ?>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <?= htmlspecialchars($item['title']) ?>
+                            </li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+
+                </ol>
+            </div>
+        </nav>
+    <?php endif; ?>
+</section>
+
 
 <div class="container py-4">
 
@@ -144,7 +185,6 @@ $totalPages = ceil($totalPosts / $limit);
 </style>
 
 <script>
-    // Grid / List Toggle
     const gridBtn = document.getElementById('gridView');
     const listBtn = document.getElementById('listView');
     const container = document.getElementById('postsContainer');

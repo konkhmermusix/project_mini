@@ -2,6 +2,7 @@
 session_start();
 require '../inc/db.php';
 
+// Check Admin
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit;
@@ -18,13 +19,13 @@ $limit = 10;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($page - 1) * $limit;
 
-// Build SQL WHERE conditions
+// Build WHERE conditions
 $where = "WHERE 1=1";
 $params = [];
 $types = '';
 
 if ($search) {
-    $where .= " AND u.email LIKE ?";
+    $where .= " AND o.email LIKE ?";
     $params[] = "%$search%";
     $types .= 's';
 }
@@ -44,17 +45,17 @@ if ($end_date) {
     $types .= 's';
 }
 
-// Total Orders Count for Pagination
-$count_sql = "SELECT COUNT(*) AS total FROM orders o LEFT JOIN users u ON o.user_id = u.id $where";
+// Total orders for pagination
+$count_sql = "SELECT COUNT(*) AS total FROM orders o $where";
 $stmt_count = $conn->prepare($count_sql);
 if ($params) $stmt_count->bind_param($types, ...$params);
 $stmt_count->execute();
 $total_orders = $stmt_count->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_orders / $limit);
 
-// Fetch orders with limit & offset
+// Fetch orders
 $sql = "
-    SELECT o.id, u.email AS user_email, o.total_price, o.payment_method, o.status, o.created_at
+    SELECT o.*, u.username
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
     $where
@@ -72,15 +73,12 @@ foreach ($bind_params as $key => $value) {
 }
 
 $stmt->bind_param($types_with_limit, ...$tmp);
-
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Monthly Summary (current month)
+// Monthly summary
 $summary_sql = "
-    SELECT 
-        COUNT(*) AS total_orders,
-        SUM(total_price) AS total_revenue
+    SELECT COUNT(*) AS total_orders, SUM(total_price) AS total_revenue
     FROM orders
     WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
 ";
@@ -89,17 +87,17 @@ $summary = $conn->query($summary_sql)->fetch_assoc();
 require 'inc/header.php';
 ?>
 
-<div class="px-2 mt-4 mb-5">
+<div class="container mt-4">
     <div class="card shadow-sm mb-3">
-        <div class="card-body p-4 d-flex align-items-center">
-            <h3 class="mb-0">Orders Report</h3>
+        <div class="card-body">
+            <h3>Orders Report</h3>
         </div>
     </div>
 
     <div class="card shadow-sm mb-3">
-        <form class="row g-3  p-4" method="GET">
+        <form class="row g-3 p-4" method="GET">
             <div class="col-md-3">
-                <input type="text" name="search" class="form-control" placeholder="Search by User Email" value="<?= htmlspecialchars($search) ?>">
+                <input type="text" name="search" class="form-control" placeholder="Search by Email" value="<?= htmlspecialchars($search) ?>">
             </div>
             <div class="col-md-2">
                 <select name="status" class="form-select">
@@ -116,7 +114,7 @@ require 'inc/header.php';
                 <input type="date" name="end_date" class="form-control" value="<?= $end_date ?>">
             </div>
             <div class="col-md-3">
-                <button class="btn btn-primary" type="submit">Filter</button>
+                <button class="btn btn-primary">Filter</button>
                 <a href="orders_report.php" class="btn btn-secondary">Reset</a>
             </div>
         </form>
@@ -124,60 +122,53 @@ require 'inc/header.php';
 
     <div class="card shadow-sm mb-3">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-active align-middle">
-                <thead class="">
+            <table class="table table-bordered table-hover align-middle">
+                <thead>
                     <tr>
-                        <th class="text-center">ID</th>
+                        <th>ID</th>
                         <th>User</th>
                         <th>Total ($)</th>
                         <th>Payment</th>
                         <th>Status</th>
                         <th>Date</th>
-                        <th class="text-center">Action</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if ($result->num_rows > 0): ?>
                         <?php while ($order = $result->fetch_assoc()): ?>
                             <tr>
-                                <td class="text-center"><?= $order['id'] ?></td>
-                                <td><?= htmlspecialchars($order['user_email']) ?></td>
+                                <td><?= $order['id'] ?></td>
+                                <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
                                 <td><?= number_format($order['total_price'], 2) ?></td>
                                 <td><?= htmlspecialchars($order['payment_method']) ?></td>
                                 <td>
                                     <?php
-                                    $status_class = '';
+                                    $class = '';
                                     switch ($order['status']) {
                                         case 'Paid':
-                                            $status_class = 'text-success';
+                                            $class = 'text-success';
                                             break;
                                         case 'Pending':
-                                            $status_class = 'text-warning';
+                                            $class = 'text-warning';
                                             break;
                                         case 'Cancelled':
-                                            $status_class = 'text-danger';
+                                            $class = 'text-danger';
                                             break;
                                     }
                                     ?>
-                                    <span class="<?= $status_class ?>"><?= $order['status'] ?></span>
+                                    <span class="<?= $class ?>"><?= $order['status'] ?></span>
                                 </td>
                                 <td><?= $order['created_at'] ?></td>
-                                <td class="text-center">
-                                    <a href="order_details.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-info me-1">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="delete_order.php?id=<?= $order['id'] ?>"
-                                        onclick="return confirm('Are you sure you want to delete this order?');"
-                                        class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                <td>
+                                    <a href="order_details.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-info">View</a>
+                                    <a href="delete_order.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this order?');">Delete</a>
                                 </td>
-
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center">No orders found.</td>
+                            <td colspan="8" class="text-center">No orders found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -194,13 +185,11 @@ require 'inc/header.php';
             </ul>
         </nav>
     </div>
-    <div class="card shadow-sm mb-3">
-        <div class="p-3 bg-light border rounded">
-            <h5>Monthly Summary (<?= date('F Y') ?>)</h5>
-            <p>Total Orders: <strong><?= $summary['total_orders'] ?></strong></p>
-            <p>Total Revenue: <strong>$<?= number_format($summary['total_revenue'], 2) ?></strong></p>
-        </div>
 
+    <div class="card shadow-sm mb-3 p-3 bg-light">
+        <h5>Monthly Summary (<?= date('F Y') ?>)</h5>
+        <p>Total Orders: <strong><?= $summary['total_orders'] ?></strong></p>
+        <p>Total Revenue: <strong>$<?= number_format($summary['total_revenue'], 2) ?></strong></p>
     </div>
 </div>
 

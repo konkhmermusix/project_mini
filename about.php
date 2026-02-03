@@ -1,15 +1,52 @@
 <?php
 require 'inc/db.php';
 require 'inc/header.php';
+
+$breadcrumb = [
+   ['title' => 'About Us']
+];
 ?>
 
 <!-- Page Banner -->
-<div class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(67, 67, 81),rgb(70, 124, 62));">
+<section class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(67, 67, 81),rgb(70, 124, 62));">
    <div class="container">
       <h1 class="fw-bold mb-2" data-aos="fade-up">About Us</h1>
       <p class="lead" data-aos="fade-up">Learn more about LSTECH and our mission</p>
    </div>
-</div>
+</section>
+
+<section class="p-4">
+   <?php
+   $breadcrumb = $breadcrumb ?? [];
+   ?>
+   <?php if (!empty($breadcrumb)): ?>
+      <nav aria-label="breadcrumb" class="bg-light border-bottom">
+         <div class="container py-2">
+            <ol class="breadcrumb mb-0">
+               <li class="breadcrumb-item">
+                  <a href="index.php">Home</a>
+               </li>
+
+               <?php foreach ($breadcrumb as $item): ?>
+                  <?php if (!empty($item['url'])): ?>
+                     <li class="breadcrumb-item">
+                        <a href="<?= $item['url'] ?>">
+                           <?= htmlspecialchars($item['title']) ?>
+                        </a>
+                     </li>
+                  <?php else: ?>
+                     <li class="breadcrumb-item active" aria-current="page">
+                        <?= htmlspecialchars($item['title']) ?>
+                     </li>
+                  <?php endif; ?>
+               <?php endforeach; ?>
+
+            </ol>
+         </div>
+      </nav>
+   <?php endif; ?>
+</section>
+
 
 <!-- About Content -->
 <div class="container my-5" data-aos="fade-up">

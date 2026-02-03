@@ -3,6 +3,9 @@ session_start();
 require 'inc/db.php';
 
 $message = '';
+// បង្កើត Variable សម្រាប់រក្សាទិន្នន័យដែលវាយបញ្ចូល
+$username = '';
+$email = '';
 
 if (isset($_POST['register'])) {
     $username = trim($_POST['username']);
@@ -10,38 +13,50 @@ if (isset($_POST['register'])) {
     $password = $_POST['password'];
     $confirm  = $_POST['confirm_password'];
 
-    // Check password match
-    if ($password !== $confirm) {
-        $message = "<div class='alert alert-danger'>Passwords do not match.</div>";
+    // 1. ឆែកមើល Username ឬ Email ថាមានរួចហើយឬនៅ
+    $checkUser = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+    $checkUser->bind_param("ss", $username, $email);
+    $checkUser->execute();
+    $result = $checkUser->get_result();
+
+    if ($result->num_rows > 0) {
+        $message = "<div class='alert alert-warning alert-dismissible fade show alert-right' role='alert'>
+                        <strong>Username or Email already exists!</strong>
+                        <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
+                    </div>";
+    }
+    // 2. ឆែក Password
+    elseif ($password !== $confirm) {
+        $message = "<div class='alert alert-danger alert-dismissible fade show alert-right' role='alert'>
+                        <strong>Passwords do not match.</strong>
+                        <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
+                    </div>";
     } elseif (strlen($password) < 8) {
-        $message = "<div class='alert alert-danger'>Password must be at least 8 characters.</div>";
+        $message = "<div class='alert alert-danger alert-dismissible fade show alert-right' role='alert'>
+                        <strong>Password must be at least 8 characters.</strong>
+                        <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
+                    </div>";
     } else {
+        // បើត្រឹមត្រូវទាំងអស់ ទើបធ្វើការ Hash និង Save
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        $sql = "INSERT INTO users (username, email, password)
-                VALUES ('$username', '$email', '$hashedPassword')";
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $username, $email, $hashedPassword);
 
-        if ($conn->query($sql)) {
-            $message = "
-             <div class='alert alert-success alert-dismissible fade show  alert-right' role='alert'>
-                <strong>Registration successful! <a href='login.php'>Login here</a></strong>
-                <button type='button' class='btn-close shadow-none' data-bs-dismiss='alert' aria-label='Close'></button>
-            </div>";
+        if ($stmt->execute()) {
+            // បើជោគជ័យ បោះ Notification ចូល Table
+            $conn->query("INSERT INTO notifications (message, type) VALUES ('New user: $username', 'user')");
+
+            $message = "<div class='alert alert-success alert-dismissible fade show alert-right' role='alert'>
+                            <strong>Registration successful! Redirecting...</strong>
+                        </div>";
+            // រង់ចាំ ២វិនាទី រួចទៅកាន់ទំព័រ Login
+            header("refresh:2;url=login.php");
         } else {
-            $message = "
-            <div class='alert alert-warning alert-dismissible fade show  alert-right' role='alert'>
-                <strong>Error: {$conn->error}</strong>
-                <button type='button' class='btn-close shadow-none' data-bs-dismiss='alert' aria-label='Close'></button>
-            </div>";
+            $message = "<div class='alert alert-danger alert-right'>Error: Could not register.</div>";
         }
     }
 }
-
-$conn->query("
-    INSERT INTO notifications (message, type)
-    VALUES ('New user has registered', 'user')
-");
-
 ?>
 
 <!DOCTYPE html>
@@ -49,17 +64,11 @@ $conn->query("
 
 <head>
     <meta charset="UTF-8">
-    <title>Create Account</title>
+    <title>Register</title>
     <link rel="icon" href="static/image/favicon/icon.png" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=0.8">
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="static/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/bootstrap-icons/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="static/css/swiper-bundle.min.css">
-    <link rel="stylesheet" href="static/css/aos.css">
-
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -70,20 +79,15 @@ $conn->query("
             justify-content: center;
         }
 
-        .register-card {
-            max-width: 420px;
-            width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        .alert-right {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-primary {
-            border-radius: 5px;
-            padding: 10px;
-            font-weight: 500;
-        }
-
-        /* ===== Outline Floating Label ===== */
         .form-outline {
             position: relative;
         }
@@ -118,21 +122,23 @@ $conn->query("
 
 <body>
 
+    <?php if (!empty($message)) echo $message; ?>
+
     <div class="card register-card p-4 bg-white">
-        <div class="text-center mb-4">
+        <div class="text-center mb-4 d-flex">
             <h3 class="fw-bold">Create Account</h3>
         </div>
 
-        <?php if (!empty($message)) echo $message; ?>
         <form method="POST" autocomplete="off">
-
             <div class="form-outline mb-3">
-                <input type="text" id="username" class="form-control" name="username" placeholder=" " required>
+                <input type="text" id="username" class="form-control" name="username"
+                    value="<?php echo htmlspecialchars($username); ?>" placeholder=" " required>
                 <label for="username">Username</label>
             </div>
 
             <div class="form-outline mb-3">
-                <input type="email" id="email" class="form-control" name="email" placeholder=" " required>
+                <input type="email" id="email" class="form-control" name="email"
+                    value="<?php echo htmlspecialchars($email); ?>" placeholder=" " required>
                 <label for="email">Email address</label>
             </div>
 
@@ -147,38 +153,25 @@ $conn->query("
             </div>
 
             <div class="d-grid mt-4">
-                <button class="btn btn-primary" name="register">
-                    Create Account
-                </button>
+                <button class="btn btn-primary" name="register">Create Account</button>
             </div>
-
         </form>
 
         <div class="text-center mt-4">
-            <small class="text-muted">
-                Already have an account?
-                <a href="login.php" class="text-decoration-none fw-medium">Login</a>
-            </small>
+            <small class="text-muted">Already have an account? <a href="login.php">Login</a></small>
         </div>
     </div>
 
     <script src="static/js/bootstrap.bundle.min.js"></script>
-    <script src="static/js/swiper-bundle.min.js"></script>
-    <script src="static/js/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800,
-            once: true
-        });
-    </script>
-
     <script>
         setTimeout(() => {
-            const alert = document.querySelector('.alert-right');
-            if (alert) alert.remove();
+            const alerts = document.querySelectorAll('.alert-right');
+            alerts.forEach(alert => {
+                let bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
         }, 3000);
     </script>
-
 </body>
 
 </html>

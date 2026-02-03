@@ -96,9 +96,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
     }
 }
 
+// Define variables
+$category_id   = $product['category_id'];
+$category_name = $product['category_name'];
+
+$breadcrumb = [
+    ['title' => 'Shop', 'url' => 'shop.php'],
+    [
+        'title' => $category_name,
+        'url'   => 'shop.php?category_id=' . $category_id
+    ],
+    ['title' => $product['name']]
+];
 
 require 'inc/header.php';
 ?>
+<!-- Page Banner -->
+<section class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(192, 191, 212),rgb(71, 2, 2));">
+    <div class="container">
+        <h1 class="fw-bold mb-2" data-aos="fade-up">Product Detail</h1>
+        <p class="lead" data-aos="fade-up">Detail </p>
+    </div>
+</section>
+
+<section class="p-4">
+    <?php
+    $breadcrumb = $breadcrumb ?? [];
+    ?>
+    <?php if (!empty($breadcrumb)): ?>
+        <nav aria-label="breadcrumb" class="bg-light border-bottom">
+            <div class="container py-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="index.php">Home</a>
+                    </li>
+
+                    <?php foreach ($breadcrumb as $item): ?>
+                        <?php if (!empty($item['url'])): ?>
+                            <li class="breadcrumb-item">
+                                <a href="<?= $item['url'] ?>">
+                                    <?= htmlspecialchars($item['title']) ?>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <?= htmlspecialchars($item['title']) ?>
+                            </li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+
+                </ol>
+            </div>
+        </nav>
+    <?php endif; ?>
+</section>
 
 <section class="py-5">
     <div class="container">
@@ -106,7 +157,9 @@ require 'inc/header.php';
             <!-- Product Image -->
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <img src="<?= htmlspecialchars($product['image']) ?>" class="img-fluid rounded shadow" style="height:400px; object-fit:cover;">
+                    <img src="<?= htmlspecialchars($product['image']) ?>"
+                        class="img-fluid rounded shadow"
+                        style="height:320px; object-fit: contain;">
                 </div>
             </div>
 
@@ -145,7 +198,9 @@ require 'inc/header.php';
                         <form method="post" class="d-flex align-items-center gap-2">
                             <input type="hidden" name="product_id" value="<?= $productId ?>">
                             <input type="number" name="qty" value="1" min="1" max="<?= $product['qty'] ?>" class="form-control w-25">
-                            <button name="add_to_cart" class="btn btn-success">Add to Cart <i class="bi bi-cart-plus"></i></button>
+                            <button name="add_to_cart" class="btn btn-success"><i class="bi bi-cart-plus me-2"></i>
+                                Add
+                            </button>
                         </form>
                     <?php else: ?>
                         <button class="btn btn-secondary" disabled>Out of Stock</button>
@@ -249,8 +304,8 @@ require 'inc/header.php';
 <!-- Related Products -->
 <section class="py-5">
     <div class="container">
-        <div class="bg-secondary shadow-sm p-2 mb-2 rounded-1 d-flex justify-content-between align-items-center">
-            <h4 class="mb-0 text-white">Related Products</h4>
+        <div class="shadow-sm p-2 mb-4 rounded-1 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 text-dark">Related Products</h4>
             <div>
                 <button class="btn btn-sm btn-light" onclick="slideLeft()"><i class="bi bi-arrow-left"></i></button>
                 <button class="btn btn-sm btn-light" onclick="slideRight()"><i class="bi bi-arrow-right"></i></button>
@@ -262,7 +317,7 @@ require 'inc/header.php';
 
                 <?php
                 $stmt = $conn->prepare("
-                    SELECT id, name, original_price, selling_price, discount_percent, image, created_at
+                    SELECT id, name, original_price, selling_price, discount_percent, image,description, created_at
                     FROM products
                     WHERE status=1 AND category_id=? AND id!=?
                     ORDER BY created_at DESC
@@ -275,7 +330,7 @@ require 'inc/header.php';
                 // Fallback if no related products in same category
                 if ($result->num_rows == 0) {
                     $stmt = $conn->prepare("
-                        SELECT id, name, original_price, selling_price, discount_percent, image, created_at
+                        SELECT id, name, original_price, selling_price, discount_percent, image, description, created_at
                         FROM products
                         WHERE status=1 AND id!=?
                         ORDER BY created_at DESC
@@ -292,7 +347,7 @@ require 'inc/header.php';
                 ?>
 
                     <div class="product-slide">
-                        <div class="card h-100 shadow-sm position-relative">
+                        <div class="card shadow-sm position-relative" style="height: 420px; width: 260px;">
 
                             <!-- NEW badge -->
                             <?php if (strtotime($row['created_at']) >= strtotime('-5 days')): ?>
@@ -305,10 +360,12 @@ require 'inc/header.php';
                             <?php endif; ?>
 
                             <!-- Product Image -->
-                            <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top" style="height:180px;object-fit:cover;">
+                            <img src="<?= htmlspecialchars($row['image']) ?>"
+                                class="card-img-top" style="height:180px; object-fit: contain;">
 
                             <div class="card-body text-center">
                                 <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
+                                <p class="card-text small text-muted"><?= substr(strip_tags($row['description']), 0, 45) ?>...</p>
 
                                 <!-- Price -->
                                 <p class="mb-1">
@@ -318,23 +375,21 @@ require 'inc/header.php';
                                     <?php endif; ?>
                                 </p>
 
-                                <div class="card-footer">
-                                    <div class="mt-auto d-flex">
-                                        <a href="product_detail.php?id=<?= $row['id'] ?>"
-                                            class="btn btn-outline-primary btn-sm w-50 d-flex align-items-center justify-content-center">
-                                            View
-                                        </a>
 
-                                        <form method="post" class="w-50">
-                                            <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
-                                            <input type="hidden" name="qty" value="1">
-                                            <button name="add_to_cart"
-                                                class="btn btn-success btn-sm w-100">
-                                                Add to Cart
-                                            </button>
-                                        </form>
-                                    </div>
+
+                                <div class="mt-auto d-flex gap-2 mb-2">
+                                    <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="bi bi-eye-fill me-2"></i>View
+                                    </a>
                                 </div>
+
+                                <form method="post" class="w-100">
+                                    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
+                                    <input type="hidden" name="qty" value="1">
+                                    <button type="submit" name="add_to_cart" class="btn btn-success w-100">
+                                        <i class="bi bi-cart-plus me-2"></i> Add
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -356,7 +411,7 @@ require 'inc/header.php';
 
     .product-slider {
         display: flex;
-        gap: 16px;
+        gap: 60px;
         transition: transform 0.4s ease;
         will-change: transform;
     }
@@ -367,7 +422,7 @@ require 'inc/header.php';
 
     .product-slide .card {
         border: none;
-        border-radius: 10px;
+        border-radius: 5px;
         overflow: hidden;
         transition: all 0.25s ease;
     }
@@ -402,42 +457,11 @@ require 'inc/header.php';
         margin-bottom: 10px;
     }
 
-    /* ===== Footer Buttons ===== */
-    .product-slide .card-footer {
-        padding: 0;
-        background: transparent;
-        border: none;
-    }
-
-    .product-slide .card-footer .btn {
-        border-radius: 6px;
-        font-size: 0.8rem;
-        transition: all 0.2s ease;
-    }
-
-    .product-slide .card-footer .btn:hover {
-        transform: scale(1.03);
-    }
-
     /* ===== NEW Badge ===== */
     .product-slide .badge {
         font-size: 0.7rem;
         padding: 6px 8px;
         border-radius: 20px;
-    }
-
-    /* ===== Slider Header ===== */
-    .bg-secondary h4 {
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    /* ===== Arrow Buttons ===== */
-    .bg-secondary button {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        padding: 0;
     }
 </style>
 <?php require 'inc/footer.php'; ?>

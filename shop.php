@@ -2,6 +2,10 @@
 session_start();
 require 'inc/db.php';
 
+$breadcrumb = [
+    ['title' => 'Shop', 'url' => 'shop.php'],
+];
+
 
 // Initialize cart
 if (!isset($_SESSION['cart'])) {
@@ -52,7 +56,7 @@ $category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
 $brand_id    = isset($_GET['brand_id']) ? intval($_GET['brand_id']) : 0;
 $search      = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sort        = $_GET['sort'] ?? '';
-$limit       = 16;
+$limit       = 12;
 $page        = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset      = ($page - 1) * $limit;
 
@@ -114,9 +118,41 @@ require 'inc/header.php';
 <!-- Page Banner -->
 <section class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(192, 191, 212),rgb(71, 2, 2));">
     <div class="container">
-        <h1 class="fw-bold mb-2">Shop</h1>
-        <p class="lead">Browse our products</p>
+        <h1 class="fw-bold mb-2" data-aos="fade-up">Shop</h1>
+        <p class="lead" data-aos="fade-up">Browse our products</p>
     </div>
+</section>
+
+<section class="p-4">
+    <?php
+    $breadcrumb = $breadcrumb ?? [];
+    ?>
+    <?php if (!empty($breadcrumb)): ?>
+        <nav aria-label="breadcrumb" class="bg-light border-bottom">
+            <div class="container py-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="index.php">Home</a>
+                    </li>
+
+                    <?php foreach ($breadcrumb as $item): ?>
+                        <?php if (!empty($item['url'])): ?>
+                            <li class="breadcrumb-item">
+                                <a href="<?= $item['url'] ?>">
+                                    <?= htmlspecialchars($item['title']) ?>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <?= htmlspecialchars($item['title']) ?>
+                            </li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+
+                </ol>
+            </div>
+        </nav>
+    <?php endif; ?>
 </section>
 
 <section class="p-4">
@@ -182,9 +218,15 @@ require 'inc/header.php';
                                     <span class="badge bg-danger position-absolute top-0 start-0 m-2">-<?= $discount ?>%</span>
                                 <?php endif; ?>
 
-                                <?php if (!empty($row['image'])): ?>
-                                    <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top" style="height:200px; object-fit:cover;">
-                                <?php endif; ?>
+                                <div class="product-img-box">
+                                    <?php if (!empty($row['image'])): ?>
+                                        <img src="<?= htmlspecialchars($row['image']) ?>"
+                                            alt="<?= htmlspecialchars($row['name']) ?>"
+                                            class="product-img"
+                                            style=" object-fit: contain;">
+
+                                    <?php endif; ?>
+                                </div>
 
                                 <div class="card-body d-flex flex-column">
                                     <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
@@ -200,7 +242,7 @@ require 'inc/header.php';
 
                                     <div class="mt-auto d-flex gap-2 mb-2">
                                         <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm w-100">
-                                            View
+                                            <i class="bi bi-eye-fill me-2"></i>View
                                         </a>
                                     </div>
 
@@ -208,7 +250,7 @@ require 'inc/header.php';
                                         <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                         <input type="hidden" name="qty" value="1">
                                         <button type="submit" name="add_to_cart" class="btn btn-success w-100">
-                                            <i class="bi bi-cart-plus"></i> Add to Cart
+                                            <i class="bi bi-cart-plus me-2"></i> Add
                                         </button>
                                     </form>
                                 </div>

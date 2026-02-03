@@ -42,9 +42,7 @@ $stmt->close();
                         <span class="text-muted">| <?= date('d M Y H:i', strtotime($o['created_at'])) ?></span>
                     </div>
                     <div class="d-flex gap-2">
-                        <span class="badge bg-<?= $o['payment_status'] == 'Paid' ? 'success' : ($o['payment_status'] == 'Pending' ? 'warning' : 'danger') ?>">
-                            <?= htmlspecialchars($o['payment_status']) ?>
-                        </span>
+                        <a href="invoice.php?id=<?= $o['id'] ?>">view</a>
                         <span class="badge bg-info text-dark">
                             <?= htmlspecialchars($o['status']) ?>
                         </span>

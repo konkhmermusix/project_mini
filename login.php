@@ -3,10 +3,11 @@ session_start();
 require 'inc/db.php';
 
 $message = '';
+$email = ''; // បង្កើត Variable សម្រាប់រក្សាទុក Email
 
 if (isset($_POST['login'])) {
 
-    $email = trim($_POST['email']);
+    $email = trim($_POST['email']); // ចាប់យក Email ដែលវាយបញ្ចូល
     $password = $_POST['password'];
 
     // Fetch user securely
@@ -36,7 +37,8 @@ if (isset($_POST['login'])) {
             }
             setcookie('cart', json_encode($_SESSION['cart']), time() + (7 * 24 * 60 * 60), "/");
         }
-        // Redirect to previous product or homepage
+
+        // Redirect ជោគជ័យ
         if (isset($_SESSION['redirect_product'])) {
             $pid = $_SESSION['redirect_product'];
             unset($_SESSION['redirect_product']);
@@ -47,6 +49,7 @@ if (isset($_POST['login'])) {
             exit;
         }
     } else {
+        // បើខុស Password ឬ Email បង្ហាញ Message និងរក្សា Email ក្នុង Input
         $message = "
         <div class='alert alert-warning alert-dismissible fade show alert-right' role='alert'>
             <strong>Invalid email or password.</strong>
@@ -54,8 +57,8 @@ if (isset($_POST['login'])) {
         </div>";
     }
 }
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -64,14 +67,9 @@ if (isset($_POST['login'])) {
     <title>Login</title>
     <link rel="icon" href="static/image/favicon/icon.png" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=0.8">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="static/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/bootstrap-icons/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="static/css/swiper-bundle.min.css">
-    <link rel="stylesheet" href="static/css/aos.css">
 
     <style>
         body {
@@ -90,12 +88,7 @@ if (isset($_POST['login'])) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-primary {
-            border-radius: 5px;
-            padding: 10px;
-            font-weight: 500;
-        }
-
+        /* CSS សម្រាប់ Alert នៅផ្នែកខាងលើស្តាំ */
         .alert-right {
             position: fixed;
             top: 20px;
@@ -141,6 +134,7 @@ if (isset($_POST['login'])) {
 <body>
 
     <?php if (!empty($message)) echo $message; ?>
+
     <div class="card login-card p-4 bg-white">
         <div class="text-center mb-4">
             <h3 class="fw-bold">Login</h3>
@@ -148,7 +142,8 @@ if (isset($_POST['login'])) {
 
         <form method="POST" autocomplete="off">
             <div class="form-outline mb-3">
-                <input type="email" id="email" class="form-control" name="email" placeholder=" " required>
+                <input type="email" id="email" class="form-control" name="email"
+                    value="<?php echo htmlspecialchars($email); ?>" placeholder=" " required>
                 <label for="email">Email address</label>
             </div>
 
@@ -160,7 +155,6 @@ if (isset($_POST['login'])) {
             <div class="d-grid mt-4">
                 <button class="btn btn-primary" name="login">Login</button>
             </div>
-
         </form>
 
         <div class="text-center mt-4">
@@ -172,22 +166,16 @@ if (isset($_POST['login'])) {
     </div>
 
     <script src="static/js/bootstrap.bundle.min.js"></script>
-    <script src="static/js/swiper-bundle.min.js"></script>
-    <script src="static/js/aos.js"></script>
     <script>
-        AOS.init({
-            duration: 800,
-            once: true
-        });
-    </script>
-
-    <script>
+        // បាត់ Alert រយៈពេល 3 វិនាទី
         setTimeout(() => {
-            const alert = document.querySelector('.alert-right');
-            if (alert) alert.remove();
+            const alertElement = document.querySelector('.alert-right');
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
         }, 3000);
     </script>
-
 </body>
 
 </html>

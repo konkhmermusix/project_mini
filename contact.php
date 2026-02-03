@@ -45,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$breadcrumb = [
+    ['title' => 'Contact']
+];
+
 require 'inc/header.php';
 ?>
 
@@ -62,14 +66,47 @@ require 'inc/header.php';
 <?php endif; ?>
 
 <!-- Page Banner -->
-<div class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(255, 234, 4),rgb(8, 39, 89));">
+<section class="py-5 text-center text-white" style="background: linear-gradient(135deg,rgb(255, 234, 4),rgb(8, 39, 89));">
     <div class="container">
         <h1 class="fw-bold mb-2" data-aos="fade-up">Contact Us</h1>
         <p class="lead" data-aos="fade-up">We'd love to hear from you!</p>
     </div>
-</div>
+</section>
 
-<div class="container my-5">
+<section class="p-4">
+    <?php
+    $breadcrumb = $breadcrumb ?? [];
+    ?>
+    <?php if (!empty($breadcrumb)): ?>
+        <nav aria-label="breadcrumb" class="bg-light border-bottom">
+            <div class="container py-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="index.php">Home</a>
+                    </li>
+
+                    <?php foreach ($breadcrumb as $item): ?>
+                        <?php if (!empty($item['url'])): ?>
+                            <li class="breadcrumb-item">
+                                <a href="<?= $item['url'] ?>">
+                                    <?= htmlspecialchars($item['title']) ?>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <?= htmlspecialchars($item['title']) ?>
+                            </li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+
+                </ol>
+            </div>
+        </nav>
+    <?php endif; ?>
+</section>
+
+
+<section class="container my-5">
     <div class="row">
         <div class="container" data-aos="fade-up">
             <div class="row">
@@ -112,7 +149,7 @@ require 'inc/header.php';
             </form>
         </div>
     </div>
-</div>
+</section>
 
 <?php require 'inc/footer.php'; ?>
 

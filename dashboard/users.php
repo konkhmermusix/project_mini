@@ -35,7 +35,6 @@ $result = $conn->query($sql);
                         <th class="text-center">ID</th>
                         <th>Username</th>
                         <th>Email</th>
-                        <th>Password</th>
                         <th>Role</th>
                         <th>Status</th>
                         <th class="text-center" width="180">Action</th>
@@ -47,7 +46,6 @@ $result = $conn->query($sql);
                             <td class="text-center"><?= $u['id'] ?></td>
                             <td><?= htmlspecialchars($u['username']) ?></td>
                             <td><?= htmlspecialchars($u['email']) ?></td>
-                            <td><?= htmlspecialchars($u['password']) ?></td>
                             <td>
                                 <span class="badge bg-info"><?= $u['role'] ?></span>
                             </td>

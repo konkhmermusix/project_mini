@@ -2,81 +2,148 @@
 session_start();
 require 'inc/db.php';
 
-// Check login
+// =====================
+// CHECK LOGIN
+// =====================
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-// Cart
+// =====================
+// USER INFO
+// =====================
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT username, phone FROM users WHERE id=?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$username = $user['username'] ?? '';
+$phone    = $user['phone'] ?? '';
+
+// =====================
+// CART
+// =====================
 $cart = $_SESSION['cart'] ?? [];
 if (empty($cart)) {
-    die("Your cart is empty.");
+    echo "<div class='container mt-5 text-center'>
+            <h4 class='text-danger'>Your cart is empty</h4>
+            <a href='shop.php' class='btn btn-primary mt-3'>Go Shopping</a>
+          </div>";
+    exit;
 }
 
-// Calculate total using selling_price
+// =====================
+// TOTAL PRICE
+// =====================
 $total_price = 0;
 foreach ($cart as $item) {
-    $price = $item['selling_price'] ?? $item['price'] ?? 0;
-    $total_price += $item['qty'] * $price;
+    $price = $item['selling_price'] ?? $item['price'];
+    $total_price += $price * $item['qty'];
 }
 
-// Handle form submission
+// =====================
+// SUBMIT CHECKOUT
+// =====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id = $_SESSION['user_id'];
+
     $name    = trim($_POST['name']);
-    $phone   = trim($_POST['phone']);
-    $email   = trim($_POST['email']);
+    $phone_i = trim($_POST['phone']);
     $address = trim($_POST['address']);
     $method  = $_POST['payment_method'];
 
-    if (empty($name) || empty($phone) || empty($email) || empty($address)) {
-        die("Please fill in all required fields.");
+    if (!$name || !$phone_i || !$address || !$method) {
+        die("All fields are required");
     }
 
-    if (!in_array($method, ['QR', 'CCD'])) die("Invalid payment method");
+    if (!in_array($method, ['QR', 'ABA', 'AC', 'CCD'])) {
+        die("Invalid payment method");
+    }
 
-    // Create order
     $status = ($method === 'CCD') ? 'Paid' : 'Pending';
+
+    // =====================
+    // INSERT ORDER
+    // =====================
     $stmt = $conn->prepare("
         INSERT INTO orders 
-        (user_id, name, phone, email, address, total_price, payment_method, status, created_at)
-        VALUES (?,?,?,?,?,?,?,?,NOW())
+        (user_id,name,phone,total_price,address,payment_method,status,created_at)
+        VALUES (?,?,?,?,?,?,?,NOW())
     ");
-    $stmt->bind_param("isssdsss", $user_id, $name, $phone, $email, $address, $total_price, $method, $status);
+    $stmt->bind_param(
+        "issssss",
+        $user_id,
+        $name,
+        $phone_i,
+        $total_price,
+        $address,
+        $method,
+        $status
+    );
     $stmt->execute();
     $order_id = $stmt->insert_id;
     $stmt->close();
 
-    // Insert order items
+    // =====================
+    // ORDER ITEMS
+    // =====================
     foreach ($cart as $item) {
-        if (!isset($item['id'])) continue;
-        $price = $item['selling_price'] ?? $item['price'] ?? 0;
-
+        $price = $item['selling_price'] ?? $item['price'];
         $stmt = $conn->prepare("
-            INSERT INTO order_items (order_id, product_id, qty, price)
+            INSERT INTO order_items (order_id,product_id,qty,price)
             VALUES (?,?,?,?)
         ");
-        $stmt->bind_param("iiid", $order_id, $item['id'], $item['qty'], $price);
+        $stmt->bind_param(
+            "iiid",
+            $order_id,
+            $item['id'],
+            $item['qty'],
+            $price
+        );
         $stmt->execute();
         $stmt->close();
     }
 
-    // Payment
-    $transaction_ref = strtoupper(uniqid("TXN"));
-    $card_name = $card_number = $card_expiry = $card_cvv = $proof_image = null;
+    // =====================
+    // UPLOAD QR SCREENSHOT
+    // =====================
+    $proof_image = null;
+    if (in_array($method, ['QR', 'ABA', 'AC']) && isset($_FILES['proof_image'])) {
+        if ($_FILES['proof_image']['error'] === 0) {
+            $dir = "uploads/payments/";
+            if (!is_dir($dir)) mkdir($dir, 0777, true);
+
+            $ext = strtolower(pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION));
+            $allow = ['jpg', 'jpeg', 'png', 'webp'];
+            if (!in_array($ext, $allow)) die("Invalid image type");
+
+            $file_name = "pay_" . time() . "_" . rand(1000, 9999) . "." . $ext;
+            move_uploaded_file($_FILES['proof_image']['tmp_name'], $dir . $file_name);
+            $proof_image = $dir . $file_name;
+        }
+    }
+
+    // =====================
+    // CREDIT CARD DATA
+    // =====================
+    $card_name = $card_number = $card_expiry = $card_cvv = null;
     if ($method === 'CCD') {
         $card_name   = $_POST['card_name'] ?? '';
         $card_number = $_POST['card_number'] ?? '';
         $card_expiry = $_POST['card_expiry'] ?? '';
         $card_cvv    = $_POST['card_cvv'] ?? '';
     }
-    $pay_status = ($method === 'CCD') ? 'Paid' : 'Pending';
+
+    // =====================
+    // INSERT PAYMENT
+    // =====================
+    $transaction_ref = strtoupper(uniqid("TXN"));
+
     $stmt = $conn->prepare("
         INSERT INTO payments
-        (order_id, transaction_ref, amount, method,
-         card_name, card_number, card_expiry, card_cvv,
-         status, proof_image, created_at)
+        (order_id,transaction_ref,amount,method,card_name,card_number,card_expiry,card_cvv,status,proof_image,created_at)
         VALUES (?,?,?,?,?,?,?,?,?,?,NOW())
     ");
     $stmt->bind_param(
@@ -89,117 +156,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $card_number,
         $card_expiry,
         $card_cvv,
-        $pay_status,
+        $status,
         $proof_image
     );
     $stmt->execute();
     $stmt->close();
 
-    // Clear cart
+    // CLEAR CART
     unset($_SESSION['cart']);
-    setcookie('cart', '', time() - 3600, "/");
+    setcookie('cart', '', time() - 3600, '/');
 
-    if ($method === 'QR') {
-        header("Location: qr_payment.php?order_id=$order_id");
+    // REDIRECT
+    if ($method === 'CCD') {
+        header("Location: invoice.php?id=$order_id");
     } else {
-        header("Location: order_success.php?id=$order_id");
+        header("Location: order_success.php?order_id=$order_id");
     }
     exit;
 }
+
+// =====================
+// AUTO QR URL (PHP)
+// =====================
+$auto_qr_data = "PAY:$total_price";
+$auto_qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($auto_qr_data);
+
 
 require 'inc/header.php';
 ?>
 
 <div class="container mt-4">
-    <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
-        <h2 class="mb-0 text-white">Checkout</h2>
-    </div>
+    <div class="card p-4 shadow-sm">
+        <h3 class="mb-3">Checkout</h3>
 
-    <div class="card shadow-sm rounded-1 p-4">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($username) ?>" placeholder="Full Name" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($phone) ?>" placeholder="Phone" required>
+                </div>
+            </div>
+
+            <textarea name="address" class="form-control mb-3" placeholder="Shipping Address" required></textarea>
+
+            <select name="payment_method" id="payment_method" class="form-select mb-3" required>
+                <option value="">-- Select Payment --</option>
+                <option value="QR">Auto QR</option>
+                <option value="ABA">ABA QR</option>
+                <option value="AC">ACLEDA QR</option>
+                <option value="CCD">Credit Card</option>
+            </select>
+
             <div class="row">
-                <div class="col-md-4">
-                    <div class="form-outline mb-3">
-                        <input type="text" name="name" class="form-control" required placeholder=" " value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
-                        <label class="form-label fw-semibold">Full Name</label>
+                <div class="col-md-6">
+                    <div id="qr_box" style="display:none;" class="mb-3">
+                        <h5 class="mb-2">Scan to Pay</h5>
+                        <img id="qr_image" src="<?= $auto_qr_url ?>" width="150" class="border rounded p-2">
+                        <p class="text-muted mt-2">Scan QR & Upload screenshot</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-outline mb-3">
-                        <input type="text" name="phone" class="form-control" required placeholder=" " value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>">
-                        <label class="form-label fw-semibold">Phone Number</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-outline mb-3">
-                        <input type="email" name="email" class="form-control" required placeholder=" " value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
-                        <label class="form-label fw-semibold">Email</label>
+                <div class="col-md-6">
+                    <div id="qr_upload" style="display:none;">
+                        <label class="form-label">Upload Payment Screenshot</label>
+                        <input type="file" name="proof_image" class="form-control" accept="image/*">
                     </div>
                 </div>
             </div>
 
-            <div class="form-outline mb-3">
-                <textarea name="address" class="form-control" rows="3" required><?= htmlspecialchars($_POST['address'] ?? '') ?></textarea>
-                <label class="form-label fw-semibold">Shipping Address</label>
-            </div>
-
-            <div class="form-outline mb-3">
-                <select name="payment_method" id="payment_method" class="form-select" required>
-                    <option value="QR">QR Payment</option>
-                    <option value="CCD">Credit Card</option>
-                </select>
-            </div>
-
-            <!-- Credit Card Fields -->
             <div id="credit_form" style="display:none;">
-                <div class="form-outline mb-3">
-                    <input type="text" name="card_name" class="form-control" placeholder="Your name">
-                    <label class="form-label fw-semibold">Card Name</label>
-                </div>
-                <div class="form-outline mb-3">
-                    <input type="text" name="card_number" class="form-control" placeholder="1234 5678 9012 3456">
-                    <label class="form-label fw-semibold">Card Number</label>
-                </div>
+                <input type="text" name="card_name" class="form-control mb-2" placeholder="Card Name">
+                <input type="text" name="card_number" class="form-control mb-2" placeholder="Card Number">
                 <div class="row">
-                    <div class="form-outline col-md-6 mb-3">
-                        <input type="text" name="card_expiry" class="form-control" placeholder="MM/YY">
-                        <label class="form-label fw-semibold">Expiry Date</label>
+                    <div class="col-md-6">
+                        <input type="text" name="card_expiry" class="form-control mb-2" placeholder="MM/YY">
                     </div>
-                    <div class="form-outline col-md-6 mb-3">
-                        <input type="text" name="card_cvv" class="form-control" placeholder="123">
-                        <label class="form-label fw-semibold">CVV</label>
+                    <div class="col-md-6">
+                        <input type="text" name="card_cvv" class="form-control mb-2" placeholder="CVV">
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between mt-3">
-                <a href="cart.php" class="btn btn-secondary w-50 py-2 fw-bold text-center">Cancel</a>
-                <button type="submit" class="btn btn-gradient w-50 py-2 fw-bold">Place Order ($<?= number_format($total_price, 2) ?>)</button>
-            </div>
+            <button class="btn btn-primary w-100 mt-3">
+                Place Order ($<?= number_format($total_price, 2) ?>)
+            </button>
         </form>
     </div>
 </div>
 
-<?php require 'inc/footer.php'; ?>
-
 <script>
-    document.getElementById('payment_method').addEventListener('change', function() {
-        document.getElementById('credit_form').style.display =
-            this.value === 'CCD' ? 'block' : 'none';
+    const payment = document.getElementById('payment_method');
+    const qrBox = document.getElementById('qr_box');
+    const qrImg = document.getElementById('qr_image');
+    const upload = document.getElementById('qr_upload');
+    const credit = document.getElementById('credit_form');
+
+    payment.addEventListener('change', function() {
+        qrBox.style.display = 'none';
+        upload.style.display = 'none';
+        credit.style.display = 'none';
+
+        if (this.value === 'ABA') {
+            qrImg.src = 'static/image/qr/aba.png';
+            qrBox.style.display = 'block';
+            upload.style.display = 'block';
+        }
+        if (this.value === 'AC') {
+            qrImg.src = 'static/image/qr/acleda.png';
+            qrBox.style.display = 'block';
+            upload.style.display = 'block';
+        }
+        if (this.value === 'QR') {
+            qrImg.src = '<?= $auto_qr_url ?>';
+            qrBox.style.display = 'block';
+            upload.style.display = 'block';
+        }
+        if (this.value === 'CCD') {
+            credit.style.display = 'block';
+        }
     });
 </script>
 
-<style>
-    .btn-gradient {
-        background: linear-gradient(135deg, #4f46e5, #3b82f6);
-        color: #fff;
-        font-size: 1.1rem;
-        border: none;
-        transition: 0.3s;
-    }
-
-    .btn-gradient:hover {
-        background: linear-gradient(135deg, #3b82f6, #4f46e5);
-        color: #fff;
-    }
-</style>
+<?php require 'inc/footer.php'; ?>

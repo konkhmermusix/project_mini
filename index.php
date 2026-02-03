@@ -15,9 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     $product_id = intval($_POST['product_id']);
     $qty        = max(1, intval($_POST['qty']));
 
-    /* =========================
-       Fetch product (NEW TABLE)
-    ========================= */
+    // Fetch product (NEW TABLE)
     $stmt = $conn->prepare("
         SELECT id, name,
                original_price,
@@ -47,9 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         $_SESSION['cart'] = [];
     }
 
-    /* =========================
-       Add / Update cart
-    ========================= */
+    // Add / Update cart
     if (isset($_SESSION['cart'][$product_id])) {
 
         $newQty = $_SESSION['cart'][$product_id]['qty'] + $qty;
@@ -63,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             'id'               => $product['id'],
             'name'             => $product['name'],
             'original_price'   => $product['original_price'],
-            'selling_price'    => $product['selling_price'], // ✅ DISCOUNTED
+            'selling_price'    => $product['selling_price'],
             'discount_percent' => $product['discount_percent'],
             'qty'              => $qty,
             'image'            => $product['image']
@@ -199,9 +195,9 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-secondary shadow-sm p-2 mb-2 rounded-1 d-flex align-items-center">
-            <h4 class="mb-0 text-white">Featured / Popular Products</h4>
-            <a class="btn btn-sm btn-outline-light ms-auto" href="shop.php">More</a>
+        <div class="shadow-sm p-2 mb-4 rounded-1 d-flex align-items-center">
+            <h4 class="mb-0 text-dark">Featured / Popular Products</h4>
+            <a class="btn btn-sm btn-outline-light text-dark fw-bold ms-auto" href="shop.php">More</a>
         </div>
 
         <div class="row">
@@ -235,13 +231,15 @@ require 'inc/header.php';
                             </span>
                         <?php endif; ?>
 
+
                         <!-- Product Image -->
-                        <?php if (!empty($row['image'])): ?>
-                            <img src="<?= htmlspecialchars($row['image']) ?>"
-                                class="card-img-top"
-                                style="height:200px; object-fit:cover;"
-                                alt="<?= htmlspecialchars($row['name']) ?>">
-                        <?php endif; ?>
+                        <div class="product-img-box">
+                            <?php if (!empty($row['image'])): ?>
+                                <img src="<?= htmlspecialchars($row['image']) ?>"
+                                    alt="<?= htmlspecialchars($row['name']) ?>"
+                                    class="product-img">
+                            <?php endif; ?>
+                        </div>
 
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title">
@@ -272,19 +270,18 @@ require 'inc/header.php';
                             <div class="mt-auto d-flex gap-2">
                                 <a href="product_detail.php?id=<?= $row['id'] ?>"
                                     class="btn btn-outline-primary btn-sm w-50">
-                                    View
+                                    <i class="bi bi-eye-fill me-2"></i> View
                                 </a>
 
                                 <form method="post" class="w-50">
                                     <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                     <input type="hidden" name="qty" value="1">
                                     <button type="submit" name="add_to_cart" class="btn btn-success btn-sm w-100">
-                                        <i class="bi bi-cart-plus"></i>
+                                        <i class="bi bi-cart-plus me-2"></i> Add
                                     </button>
                                 </form>
                             </div>
                         </div>
-
                     </div>
                 </div>
             <?php endwhile; ?>
@@ -294,8 +291,8 @@ require 'inc/header.php';
 
 <section class="p-4 bg-light">
     <div class="container">
-        <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
-            <h4 class="mb-0 text-white">Deals / Flash Sales</h4>
+        <div class="shadow-sm p-2 mb-5 rounded-1">
+            <h4 class="mb-0 text-dark">Deals / Flash Sales</h4>
         </div>
 
         <div class="row">
@@ -329,12 +326,13 @@ require 'inc/header.php';
                         <?php endif; ?>
 
                         <!-- Product Image -->
-                        <?php if (!empty($row['image'])): ?>
-                            <img src="<?= htmlspecialchars($row['image']) ?>"
-                                class="card-img-top"
-                                style="height:200px; object-fit:cover;"
-                                alt="<?= htmlspecialchars($row['name']) ?>">
-                        <?php endif; ?>
+                        <div class="product-img-box">
+                            <?php if (!empty($row['image'])): ?>
+                                <img src="<?= htmlspecialchars($row['image']) ?>"
+                                    alt="<?= htmlspecialchars($row['name']) ?>"
+                                    class="product-img">
+                            <?php endif; ?>
+                        </div>
 
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title">
@@ -365,7 +363,7 @@ require 'inc/header.php';
                             <div class="mt-auto d-flex gap-2">
                                 <a href="product_detail.php?id=<?= $row['id'] ?>"
                                     class="btn btn-outline-primary btn-sm w-50">
-                                    View
+                                    <i class="bi bi-eye-fill me-2"></i> View
                                 </a>
 
                                 <form method="post" class="w-50">
@@ -373,7 +371,7 @@ require 'inc/header.php';
                                     <input type="hidden" name="qty" value="1">
                                     <button type="submit" name="add_to_cart"
                                         class="btn btn-success btn-sm w-100">
-                                        Add to Cart
+                                        <i class="bi bi-cart-plus me-2"></i> Add
                                     </button>
                                 </form>
                             </div>
@@ -388,8 +386,8 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-info shadow-sm p-2 mb-4 rounded-1">
-            <h4 class="mb-0 text-white">Promotion / Discount</h4>
+        <div class="shadow-sm p-2 mb-4 rounded-1">
+            <h4 class="mb-0 text-dark">Promotion / Discount</h4>
         </div>
 
         <?php
@@ -413,8 +411,8 @@ require 'inc/header.php';
             }
         ?>
 
-            <div class="card mb-4 shadow-sm p-3">
-                <div class="row g-0 align-items-center">
+            <div class="card mb-4 shadow-sm p-5 ">
+                <div class="row g-0 align-items-center mt-5 mb-5">
 
                     <!-- Text Left -->
                     <div class="col-md-6">
@@ -451,7 +449,7 @@ require 'inc/header.php';
                         <div class="d-flex gap-2">
                             <a href="product_detail.php?id=<?= $row['id'] ?>"
                                 class="btn btn-outline-primary">
-                                View
+                                <i class="bi bi-eye-fill me-2"></i> View
                             </a>
 
                             <form method="post">
@@ -459,7 +457,7 @@ require 'inc/header.php';
                                 <input type="hidden" name="qty" value="1">
                                 <button type="submit" name="add_to_cart"
                                     class="btn btn-success">
-                                    Add to Cart
+                                    <i class="bi bi-cart-plus me-2"></i> Add
                                 </button>
                             </form>
                         </div>
@@ -474,7 +472,6 @@ require 'inc/header.php';
                                 alt="<?= htmlspecialchars($row['name']) ?>">
                         <?php endif; ?>
                     </div>
-
                 </div>
             </div>
 
@@ -484,8 +481,8 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-info shadow-sm p-2 mb-2 rounded-1">
-            <h4 class="mb-0 text-white">New Arrival</h4>
+        <div class="shadow-sm p-2 mb-4 rounded-1">
+            <h4 class="mb-0 text-dark">New Arrival</h4>
         </div>
 
         <div class="row">
@@ -527,13 +524,14 @@ require 'inc/header.php';
                             </span>
                         <?php endif; ?>
 
-                        <!-- Image -->
-                        <?php if (!empty($row['image'])): ?>
-                            <img src="<?= htmlspecialchars($row['image']) ?>"
-                                class="card-img-top"
-                                style="height:200px; object-fit:cover;"
-                                alt="<?= htmlspecialchars($row['name']) ?>">
-                        <?php endif; ?>
+                        <!-- Product Image -->
+                        <div class="product-img-box">
+                            <?php if (!empty($row['image'])): ?>
+                                <img src="<?= htmlspecialchars($row['image']) ?>"
+                                    alt="<?= htmlspecialchars($row['name']) ?>"
+                                    class="product-img">
+                            <?php endif; ?>
+                        </div>
 
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title">
@@ -564,7 +562,7 @@ require 'inc/header.php';
                             <div class="mt-auto d-flex gap-2">
                                 <a href="product_detail.php?id=<?= $row['id'] ?>"
                                     class="btn btn-outline-primary btn-sm w-50">
-                                    View
+                                    <i class="bi bi-eye-fill me-2"></i> View
                                 </a>
 
                                 <form method="post" class="w-50">
@@ -572,7 +570,7 @@ require 'inc/header.php';
                                     <input type="hidden" name="qty" value="1">
                                     <button type="submit" name="add_to_cart"
                                         class="btn btn-success btn-sm w-100">
-                                        Add to Cart
+                                        <i class="bi bi-cart-plus me-2"></i> Add
                                     </button>
                                 </form>
                             </div>
@@ -587,8 +585,8 @@ require 'inc/header.php';
 
 <section class="p-4">
     <div class="container">
-        <div class="bg-warning shadow-sm p-2 mb-4 rounded-1">
-            <h4 class="mb-0 text-white">Best Seller Products</h4>
+        <div class="shadow-sm p-2 mb-4 rounded-1">
+            <h4 class="mb-0 text-dark">Best Seller Products</h4>
         </div>
 
         <div class="swiper products">
@@ -609,20 +607,23 @@ require 'inc/header.php';
                     }
                 ?>
                     <div class="swiper-slide">
-                        <div class="card rounded-0 h-100 shadow-none" style="width:310px;">
+                        <div class="card rounded-0 h-80 shadow-none">
 
                             <!-- Discount Badge -->
                             <?php if ($discount > 0): ?>
-                                <span class="badge bg-danger position-absolute m-2">-<?= $discount ?>%</span>
+                                <span class="badge bg-danger position-absolute m-2" style="font-size: 12px;">-<?= $discount ?>%</span>
                             <?php endif; ?>
 
                             <!-- Product Image -->
-                            <?php if (!empty($row['image'])): ?>
-                                <img src="<?= htmlspecialchars($row['image']) ?>"
-                                    class="card-img-top"
-                                    style="height:170px; object-fit:cover;"
-                                    alt="<?= htmlspecialchars($row['name']) ?>">
-                            <?php endif; ?>
+                            <div class="product-img-box">
+                                <?php if (!empty($row['image'])): ?>
+                                    <img src="<?= htmlspecialchars($row['image']) ?>"
+                                        alt="<?= htmlspecialchars($row['name']) ?>"
+                                        class="product-img"
+                                        style=" object-fit: contain;">
+
+                                <?php endif; ?>
+                            </div>
 
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title"><?= htmlspecialchars($row['name']) ?></h6>
@@ -648,13 +649,15 @@ require 'inc/header.php';
                                 <?php endif; ?>
 
                                 <!-- Actions -->
-                                <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary mt-auto">View</a>
-                                <div class="mt-2 d-flex align-items-stretch">
+                                <a href="product_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye-fill me-2"></i> View
+                                </a>
+                                <div class="mt-1 d-flex align-items-stretch">
                                     <form method="post" class="flex-fill m-0">
                                         <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
                                         <input type="hidden" name="qty" value="1">
                                         <button name="add_to_cart" class="btn btn-success btn-sm w-100">
-                                            Add to Cart
+                                            <i class="bi bi-cart-plus me-2"></i> Add
                                         </button>
                                     </form>
                                 </div>
@@ -671,68 +674,104 @@ require 'inc/header.php';
     </div>
 </section>
 
-
 <section class="p-4">
     <div class="container">
-        <div class="bg-secondary shadow-sm p-2 mb-3 rounded-1">
-            <h4 class="mb-0 text-white">Customer Reviews</h4>
+        <div class="shadow-sm p-2 mb-4 rounded-1">
+            <h4 class="mb-0 text-dark">Customer Reviews</h4>
         </div>
 
-        <div class="row">
-            <?php
-            $reviews = $conn->query("SELECT * FROM reviews WHERE status=1 ORDER BY created_at DESC LIMIT 4");
-            while ($review = $reviews->fetch_assoc()):
-                $firstLetter = strtoupper(substr($review['user_name'], 0, 1));
-                $profileUrl = "profile_user.php?id=" . $review['user_id'];
-            ?>
-                <div class="col-md-6 mb-3">
-                    <div class="card p-3 shadow-sm h-100">
-                        <div class="d-flex align-items-center mb-2">
-                            <a href="<?= $profileUrl ?>" class="d-flex align-items-center text-decoration-none text-dark">
-                                <?php if (!empty($review['profile_image'])): ?>
-                                    <img src="<?= htmlspecialchars($review['profile_image']) ?>"
-                                        class="rounded-circle me-3"
-                                        style="width:50px; height:50px; object-fit:cover;">
-                                <?php else: ?>
-                                    <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3"
-                                        style="width:50px; height:50px; font-weight:bold; font-size:20px;">
-                                        <?= $firstLetter ?>
-                                    </div>
-                                <?php endif; ?>
-                                <div>
-                                    <strong><?= htmlspecialchars($review['user_name']) ?></strong><br>
-                                    <small class="text-warning">
-                                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                                            <?= ($i <= intval($review['rating'])) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>'; ?>
-                                        <?php endfor; ?>
-                                    </small>
-                                </div>
-                            </a>
-                        </div>
-                        <p class="small text-muted mb-0"><?= htmlspecialchars($review['comment']) ?></p>
-                    </div>
-                </div>
-            <?php endwhile; ?>
+        <div id="reviewCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
 
+                <?php
+                $reviews = $conn->query("SELECT * FROM reviews WHERE status=1 ORDER BY created_at DESC");
+                $active = "active";
+                $i = 0;
+
+                while ($review = $reviews->fetch_assoc()):
+                    $firstLetter = strtoupper(substr($review['user_name'], 0, 1));
+                    $profileUrl = "profile_user.php?id=" . $review['user_id'];
+
+                    // open slide every 2 items
+                    if ($i % 2 == 0):
+                ?>
+                        <div class="carousel-item <?= $active ?>">
+                            <div class="row justify-content-center">
+                            <?php endif; ?>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="card review-card p-3 shadow-sm h-100" data-aos="zoom-in" data-aos-delay="200">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <a href="<?= $profileUrl ?>" class="d-flex align-items-center text-decoration-none text-dark">
+                                            <?php if (!empty($review['profile_image'])): ?>
+                                                <img src="<?= htmlspecialchars($review['profile_image']) ?>"
+                                                    class="rounded-circle me-2"
+                                                    style="width:40px;height:40px;object-fit:cover;">
+                                            <?php else: ?>
+                                                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-2"
+                                                    style="width:40px;height:40px;font-weight:bold;">
+                                                    <?= $firstLetter ?>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div>
+                                                <strong><?= htmlspecialchars($review['user_name']) ?></strong><br>
+                                                <small class="text-warning">
+                                                    <?php for ($s = 1; $s <= 5; $s++): ?>
+                                                        <?= ($s <= $review['rating']) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>'; ?>
+                                                    <?php endfor; ?>
+                                                </small>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        <?= htmlspecialchars($review['comment']) ?>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <?php
+                            // close slide every 2 items
+                            if ($i % 2 == 1):
+                            ?>
+                            </div>
+                        </div>
+                <?php
+                                $active = "";
+                            endif;
+                            $i++;
+                        endwhile;
+
+                        // close last slide if odd number
+                        if ($i % 2 != 0):
+                            echo '</div></div>';
+                        endif;
+                ?>
+
+            </div>
+
+            <!-- Controls -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#reviewCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#reviewCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
         </div>
     </div>
 </section>
 
-<section class="p-4 bg-light">
-    <div class="container text-center">
+<section class="p-4 bg-warning">
+    <div class="container text-center mt-5 mb-5">
         <h4>Subscribe to our Newsletter</h4>
         <p>Get latest updates and offers</p>
 
         <?php if (isset($_SESSION['user_id'])): ?>
             <form method="post" class="d-flex justify-content-center">
-                <input type="email"
-                    name="email"
-                    class="form-control w-50 me-2"
-                    placeholder="Enter your email"
-                    required>
-                <button type="submit"
-                    name="subscribe"
-                    class="btn btn-primary">
+                <div class="form-outline w-50 me-2">
+                    <input type="email" name="email" class="form-control" placeholder=" " required>
+                    <label for="">Enter your email</label>
+                </div>
+                <button type="submit" name="subscribe" class="btn btn-primary">
                     Subscribe
                 </button>
             </form>
@@ -741,7 +780,6 @@ require 'inc/header.php';
                 Please <a href="login.php" class="fw-bold">Login</a> to subscribe our newsletter
             </div>
         <?php endif; ?>
-
     </div>
 </section>
 
