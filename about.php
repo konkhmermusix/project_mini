@@ -69,7 +69,6 @@ $breadcrumb = [
    <h4 class="fw-bold text-center mb-4">The LSTECH Team</h4>
 
    <div class="row text-center">
-      <!-- Member 1 -->
       <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up">
          <img src="static/image/about/leav_sis.jpg" class="rounded-circle mb-3" width="150" height="170" alt="Leav Sis">
          <h6 class="fw-bold">Leav Sis</h6>
@@ -92,6 +91,12 @@ $breadcrumb = [
          <img src="static/image/about/khim_long.jpg" class="rounded-circle mb-3" width="150" height="160" alt="Khim Long">
          <h6 class="fw-bold">Khim Long</h6>
          <p class="text-muted">Technical Support Manager</p>
+      </div>
+
+      <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up">
+         <img src="static/image/about/Keat.jpg" class="rounded-circle mb-3" width="150" height="170" alt="Chun Keat">
+         <h6 class="fw-bold">Chun Keat</h6>
+         <p class="text-muted">Sales & Customer Service Manager</p>
       </div>
    </div>
 </div>

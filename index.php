@@ -692,6 +692,7 @@ require 'inc/header.php';
                     $firstLetter = strtoupper(substr($review['user_name'], 0, 1));
                     $profileUrl = "profile_user.php?id=" . $review['user_id'];
 
+
                     // open slide every 2 items
                     if ($i % 2 == 0):
                 ?>

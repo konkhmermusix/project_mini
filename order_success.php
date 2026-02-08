@@ -56,7 +56,6 @@ require 'inc/header.php';
         <!-- USER INFO -->
         <p><strong>Name:</strong> <?= htmlspecialchars($order['name'] ?? 'N/A') ?></p>
         <p><strong>Phone:</strong> <?= htmlspecialchars($order['phone'] ?? 'N/A') ?></p>
-        <p><strong>Email:</strong> <?= htmlspecialchars($order['email'] ?? 'N/A') ?></p>
         <p><strong>Shipping Address:</strong> <?= htmlspecialchars($order['address'] ?? 'N/A') ?></p>
         <p><strong>Status:</strong> <?= htmlspecialchars($order['status'] ?? 'N/A') ?></p>
         <p><strong>Payment Method:</strong> <?= htmlspecialchars($order['payment_method'] ?? 'N/A') ?></p>

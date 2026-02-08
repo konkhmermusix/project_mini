@@ -69,53 +69,143 @@ if (isset($_POST['register'])) {
     <meta name="viewport" content="width=device-width, initial-scale=0.8">
     <link rel="stylesheet" href="static/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/bootstrap-icons/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4e73df;
+            --bg-gradient: linear-gradient(135deg, rgb(139, 137, 183), rgba(255, 247, 0, 0.24));
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, rgb(139, 137, 183), rgba(255, 247, 0, 0.24));
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0;
+            padding: 20px;
         }
 
-        .alert-right {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            min-width: 300px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .register-card {
+            max-width: 450px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: none;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .card-header-custom {
+            background: transparent;
+            padding: 30px 30px 30px 30px;
+            text-align: center;
+            border: none;
+        }
+
+        .card-header-custom h3 {
+            color: #333;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
         .form-outline {
             position: relative;
+            margin-bottom: 20px;
         }
 
-        .form-outline input {
-            height: 45px;
-            border-radius: 5px;
-            padding: 16px 12px;
+        /* បង្កើតស្ទីល Input ថ្មី */
+        .form-control {
+            height: 52px;
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 15px;
+            transition: all 0.3s ease;
         }
 
+        .form-control:focus {
+            background: #fff;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(78, 115, 223, 0.1);
+            outline: none;
+        }
+
+        /* Floating Label Logic */
         .form-outline label {
             position: absolute;
             top: 50%;
-            left: 12px;
+            left: 15px;
             transform: translateY(-50%);
-            background: #fff;
-            padding: 0 6px;
-            color: #6c757d;
-            font-size: 14px;
-            transition: 0.2s ease;
+            color: #999;
+            padding: 0 5px;
             pointer-events: none;
+            transition: all 0.2s ease;
+            background: transparent;
         }
 
-        .form-outline input:focus+label,
-        .form-outline input:not(:placeholder-shown)+label {
+        .form-control:focus+label,
+        .form-control:not(:placeholder-shown)+label {
             top: 0;
+            left: 12px;
             font-size: 12px;
-            color: #0d6efd;
+            font-weight: 700;
+            color: var(--primary-color);
+            background: white;
+        }
+
+        .btn-register {
+            height: 52px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2);
+        }
+
+        .btn-register:hover {
+            background: #3e5ec2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(78, 115, 223, 0.3);
+        }
+
+        .alert-right {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 1050;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .login-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -124,53 +214,55 @@ if (isset($_POST['register'])) {
 
     <?php if (!empty($message)) echo $message; ?>
 
-    <div class="card register-card p-4 bg-white">
-        <div class="text-center mb-4 d-flex">
-            <h3 class="fw-bold">Create Account</h3>
+    <div class="card register-card p-4">
+        <div class="card-header-custom">
+            <h3>Create Account</h3>
         </div>
 
-        <form method="POST" autocomplete="off">
-            <div class="form-outline mb-3">
+        <form method="POST" autocomplete="off" class="px-2">
+            <div class="form-outline">
                 <input type="text" id="username" class="form-control" name="username"
                     value="<?php echo htmlspecialchars($username); ?>" placeholder=" " required>
-                <label for="username">Username</label>
+                <label for="username"><i class="bi bi-person me-1"></i> Username</label>
             </div>
 
-            <div class="form-outline mb-3">
+            <div class="form-outline">
                 <input type="email" id="email" class="form-control" name="email"
                     value="<?php echo htmlspecialchars($email); ?>" placeholder=" " required>
-                <label for="email">Email address</label>
+                <label for="email"><i class="bi bi-envelope me-1"></i> Email address</label>
             </div>
 
-            <div class="form-outline mb-3">
+            <div class="form-outline">
                 <input type="password" id="password" class="form-control" name="password" placeholder=" " required>
-                <label for="password">Password</label>
+                <label for="password"><i class="bi bi-lock me-1"></i> Password</label>
             </div>
 
-            <div class="form-outline mb-3">
+            <div class="form-outline">
                 <input type="password" id="confirm_password" class="form-control" name="confirm_password" placeholder=" " required>
-                <label for="confirm_password">Confirm Password</label>
+                <label for="confirm_password"><i class="bi bi-shield-check me-1"></i> Confirm Password</label>
             </div>
 
-            <div class="d-grid mt-4">
-                <button class="btn btn-primary" name="register">Create Account</button>
-            </div>
+            <button type="submit" class="btn btn-register w-100 mt-3" name="register">
+                Sign Up
+            </button>
         </form>
 
-        <div class="text-center mt-4">
-            <small class="text-muted">Already have an account? <a href="login.php">Login</a></small>
+        <div class="text-center mt-4 mb-2">
+            <span class="text-muted">Already have an account?</span>
+            <a href="login.php" class="login-link">Login Now</a>
         </div>
     </div>
 
     <script src="static/js/bootstrap.bundle.min.js"></script>
     <script>
+        // បិទ Alert អូតូក្នុងរយៈពេល ៤វិនាទី
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert-right');
             alerts.forEach(alert => {
                 let bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             });
-        }, 3000);
+        }, 4000);
     </script>
 </body>
 

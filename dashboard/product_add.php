@@ -36,7 +36,7 @@ if (isset($_POST['submit'])) {
     /* Image Upload */
     $image = null;
     if (!empty($_FILES['image']['name'])) {
-        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', ''];
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
 
         if (!in_array($ext, $allowed)) {
