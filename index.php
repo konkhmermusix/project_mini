@@ -689,9 +689,11 @@ require 'inc/header.php';
                 $i = 0;
 
                 while ($review = $reviews->fetch_assoc()):
-                    $firstLetter = strtoupper(substr($review['user_name'], 0, 1));
-                    $profileUrl = "profile_user.php?id=" . $review['user_id'];
-
+                    // Check null for user_name
+                    $userName = $review['user_name'] ?? 'Anonymous';
+                    $firstLetter = strtoupper(substr($userName, 0, 1));
+                    $profileUrl = "profile_user.php?id=" . ($review['user_id'] ?? 0);
+                    $comment = $review['comment'] ?? '';
 
                     // open slide every 2 items
                     if ($i % 2 == 0):
@@ -715,17 +717,17 @@ require 'inc/header.php';
                                                 </div>
                                             <?php endif; ?>
                                             <div>
-                                                <strong><?= htmlspecialchars($review['user_name']) ?></strong><br>
+                                                <strong><?= htmlspecialchars($userName) ?></strong><br>
                                                 <small class="text-warning">
                                                     <?php for ($s = 1; $s <= 5; $s++): ?>
-                                                        <?= ($s <= $review['rating']) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>'; ?>
+                                                        <?= ($s <= ($review['rating'] ?? 0)) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>'; ?>
                                                     <?php endfor; ?>
                                                 </small>
                                             </div>
                                         </a>
                                     </div>
                                     <p class="small text-muted mb-0">
-                                        <?= htmlspecialchars($review['comment']) ?>
+                                        <?= htmlspecialchars($comment) ?>
                                     </p>
                                 </div>
                             </div>
