@@ -10,7 +10,6 @@ if (!$id) {
     exit;
 }
 
-// --- ១. ទាញទិន្នន័យចាស់មកបង្ហាញ (ធ្វើតែម្ដងបានហើយ) ---
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -49,25 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 require 'inc/header.php';
 ?>
-
-<style>
-    /* រក្សា Style ឱ្យដូច Login/Register */
-    .form-outline {
-        position: relative;
-    }
-
-    .form-outline label {
-        position: absolute;
-        top: 0;
-        left: 12px;
-        font-size: 12px;
-        font-weight: 700;
-        color: #4e73df;
-        background: white;
-        padding: 0 5px;
-        transform: translateY(-50%);
-    }
-</style>
 
 <?php if (!empty($message)) echo $message; ?>
 

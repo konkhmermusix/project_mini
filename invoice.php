@@ -2,17 +2,13 @@
 session_start();
 require 'inc/db.php';
 
-// =========================
 // GET ORDER ID
-// =========================
 $order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($order_id <= 0) {
     die("<div class='container mt-5 text-center text-danger'><h4>Invalid order</h4></div>");
 }
 
-// =========================
 // FETCH ORDER
-// =========================
 $stmt = $conn->prepare("
     SELECT o.*, u.username 
     FROM orders o
@@ -28,9 +24,7 @@ if (!$order) {
     die("<div class='container mt-5 text-center text-danger'><h4>Order not found</h4></div>");
 }
 
-// =========================
 // FETCH ORDER ITEMS
-// =========================
 $stmt = $conn->prepare("
     SELECT oi.*, p.name, p.image
     FROM order_items oi
@@ -42,9 +36,7 @@ $stmt->execute();
 $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// =========================
 // FETCH LATEST PAYMENT
-// =========================
 $stmt = $conn->prepare("
     SELECT * 
     FROM payments 
@@ -57,9 +49,7 @@ $stmt->execute();
 $payment = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// =========================
 // DETERMINE OVERALL STATUS
-// =========================
 $overall_status = 'Pending'; // default
 if ($order['status'] === 'Cancelled') {
     $overall_status = 'Cancelled';

@@ -2,9 +2,8 @@
 require '../inc/db.php';
 session_start();
 
-/* =========================
-   Admin Guard
-========================= */
+
+//    Admin Guard
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit;
@@ -18,15 +17,13 @@ if ($id <= 0) {
     exit;
 }
 
-/* =========================
-   Fetch Brands & Categories
-========================= */
+
+//    Fetch Brands & Categories
 $brands = $conn->query("SELECT id,name FROM brands WHERE status=1 ORDER BY name");
 $categories = $conn->query("SELECT id,name FROM categories WHERE status=1 ORDER BY name");
 
-/* =========================
-   Fetch Product
-========================= */
+
+//    Fetch Product
 $stmt = $conn->prepare("SELECT * FROM products WHERE id=?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -38,9 +35,8 @@ if (!$product) {
     exit;
 }
 
-/* =========================
-   Handle Update
-========================= */
+
+//    Handle Update
 if (isset($_POST['submit'])) {
 
     $name          = trim($_POST['name']);
@@ -55,9 +51,8 @@ if (isset($_POST['submit'])) {
     $trending      = isset($_POST['trending']) ? 1 : 0;
     $status        = isset($_POST['status']) ? 1 : 0;
 
-    /* =========================
-       Image Upload
-    ========================= */
+
+    //    Image Upload
     $image = $product['image'];
 
     if (!empty($_FILES['image']['name'])) {
@@ -72,9 +67,8 @@ if (isset($_POST['submit'])) {
         }
     }
 
-    /* =========================
-       Update DB
-    ========================= */
+
+    //    Update DB
     if (empty($message)) {
 
         $stmt = $conn->prepare("
