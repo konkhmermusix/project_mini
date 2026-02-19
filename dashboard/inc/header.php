@@ -4,7 +4,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require '../inc/db.php';
 
-// Admin permision
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../../login.php");
     exit;
@@ -51,7 +50,6 @@ $notifications = $conn->query("
             overflow-x: hidden;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 250px;
             background-color: #212529;
@@ -60,18 +58,15 @@ $notifications = $conn->query("
             position: fixed;
             top: 0;
 
-            /* hide by default on mobile */
             padding: 1rem 15px 15px 15px;
             transition: all 0.3s ease;
             z-index: 1050;
         }
 
-        /* Show sidebar */
         .sidebar.show {
             left: 0;
         }
 
-        /* Close button inside sidebar (mobile only) */
         .sidebar .close-sidebar {
             display: none;
             position: absolute;
@@ -109,14 +104,12 @@ $notifications = $conn->query("
             display: block;
         }
 
-        /* Main content */
         .main-content {
             margin-left: 250px;
             width: calc(100% - 250px);
             padding: 2px;
         }
 
-        /* Sticky Header */
         .header-sticky {
             z-index: 1020;
             border-bottom: 1px solid #dee2e6;
@@ -206,8 +199,6 @@ $notifications = $conn->query("
 </head>
 
 <body style="font-family: Verdana, Geneva, Tahoma, sans-serif;">
-
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="d-flex align-items-center justify-content-between py-3 px-3 position-relative" style="height:60px;">
             <a class="sidebar-brand text-decoration-none" href="dashboard.php">
@@ -221,51 +212,6 @@ $notifications = $conn->query("
             <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'dashboard.php') echo 'active'; ?>" href="dashboard.php">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
-            <a class="nav-link collapsed" data-bs-toggle="collapse" href="#productsMenu" role="button" aria-expanded="false" aria-controls="productsMenu">
-                <i class="bi bi-box-seam me-2"></i> Posts
-                <i class="bi bi-caret-down-fill ms-auto"></i>
-            </a>
-            <div class="collapse <?php if (in_array(basename($_SERVER['PHP_SELF']), ['products.php', 'categories.php', 'brands.php', 'slideshows.php'])) echo 'show'; ?>" id="productsMenu">
-                <nav class="nav flex-column ms-3">
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'products.php') echo 'active'; ?>" href="products.php">
-                        <i class="bi bi-box-seam me-2"></i> Products
-                    </a>
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'categories.php') echo 'active'; ?>" href="categories.php">
-                        <i class="bi bi-bag me-2"></i> Categories
-                    </a>
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'brands.php') echo 'active'; ?>" href="brands.php">
-                        <i class="bi bi-tags me-2"></i> Brands
-                    </a>
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'slideshows.php') echo 'active'; ?>" href="slideshows.php">
-                        <i class="bi bi-journal-text me-2"></i> Slide Shows
-                    </a>
-                </nav>
-            </div>
-            <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'blog.php') echo 'active'; ?>" href="blog.php">
-                <i class="bi bi-journal-text me-2"></i> Blog
-            </a>
-
-            <a class="nav-link collapsed" data-bs-toggle="collapse" href="#ordersMenu" role="button" aria-expanded="false" aria-controls="ordersMenu">
-                <i class="bi bi-receipt me-2"></i>Reports
-                <i class="bi bi-caret-down-fill ms-auto"></i>
-            </a>
-            <div class="collapse <?php if (in_array(basename($_SERVER['PHP_SELF']), ['orders_report.php', 'sales_report.php', 'top_products.php'])) echo 'show'; ?>" id="ordersMenu">
-                <nav class="nav flex-column ms-3">
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'orders_report.php') echo 'active'; ?>" href="orders_report.php">
-                        <i class="bi bi-bar-chart me-2"></i> Orders Report
-                    </a>
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'sales_report.php') echo 'active'; ?>" href="sales_report.php">
-                        <i class="bi bi-graph-up me-2"></i> Sales Report
-                    </a>
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'top_products.php') echo 'active'; ?>" href="top_products.php">
-                        <i class="bi bi-award me-2"></i> Top Products
-                    </a>
-                </nav>
-            </div>
-
-            <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'users.php') echo 'active'; ?>" href="users.php">
-                <i class="bi bi-people me-2"></i> Users
-            </a>
 
             <a class="nav-link text-warning" href="../logout.php">
                 <i class="bi bi-box-arrow-right me-2"></i> Logout
@@ -274,7 +220,6 @@ $notifications = $conn->query("
         </nav>
     </div>
 
-    <!-- Main content -->
     <div class="main-content ms-auto">
         <div class="sticky-top header-sticky bg-white shadow-sm p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap">
             <div class="d-flex align-items-center gap-2">
@@ -304,32 +249,7 @@ $notifications = $conn->query("
                         <?php endif; ?>
                     </button>
 
-                    <!-- <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">  </span>-->
-
-                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width:320px;">
-                        <li class="dropdown-header">Notifications</li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <?php if ($notifications->num_rows > 0): ?>
-                            <?php while ($n = $notifications->fetch_assoc()): ?>
-                                <li>
-                                    <a class="dropdown-item p-3 <?php echo $n['is_read'] ? '' : 'fw-bold'; ?>"
-                                        href="<?php echo !empty($n['link']) ? $n['link'] : '#'; ?>">
-                                        <i class="bi bi-bell me-2"></i>
-                                        <?php echo htmlspecialchars($n['message']); ?><br>
-                                        <small class="text-muted"><?php echo $n['created_at']; ?></small>
-                                    </a>
-                                </li>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <li class="dropdown-item text-center text-muted">No notifications</li>
-                        <?php endif; ?>
-                    </ul>
-
                 </div>
-
 
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="accountDropdown" data-bs-toggle="dropdown">
@@ -347,5 +267,4 @@ $notifications = $conn->query("
                 </div>
             </div>
         </div>
-        <!-- Main dashboard content -->
         <div class="container-fluid overflow-hidden">

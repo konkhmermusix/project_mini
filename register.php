@@ -3,7 +3,6 @@ session_start();
 require 'inc/db.php';
 
 $message = '';
-// បង្កើត Variable សម្រាប់រក្សាទិន្នន័យដែលវាយបញ្ចូល
 $username = '';
 $email = '';
 
@@ -13,7 +12,6 @@ if (isset($_POST['register'])) {
     $password = $_POST['password'];
     $confirm  = $_POST['confirm_password'];
 
-    // 1. ឆែកមើល Username ឬ Email ថាមានរួចហើយឬនៅ
     $checkUser = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
     $checkUser->bind_param("ss", $username, $email);
     $checkUser->execute();
@@ -25,7 +23,7 @@ if (isset($_POST['register'])) {
                         <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
                     </div>";
     }
-    // 2. ឆែក Password
+
     elseif ($password !== $confirm) {
         $message = "<div class='alert alert-danger alert-dismissible fade show alert-right' role='alert'>
                         <strong>Passwords do not match.</strong>
@@ -37,20 +35,16 @@ if (isset($_POST['register'])) {
                         <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
                     </div>";
     } else {
-        // បើត្រឹមត្រូវទាំងអស់ ទើបធ្វើការ Hash និង Save
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $username, $email, $hashedPassword);
 
         if ($stmt->execute()) {
-            // បើជោគជ័យ បោះ Notification ចូល Table
-            $conn->query("INSERT INTO notifications (message, type) VALUES ('New user: $username', 'user')");
 
             $message = "<div class='alert alert-success alert-dismissible fade show alert-right' role='alert'>
                             <strong>Registration successful! Redirecting...</strong>
                         </div>";
-            // រង់ចាំ ២វិនាទី រួចទៅកាន់ទំព័រ Login
             header("refresh:2;url=login.php");
         } else {
             $message = "<div class='alert alert-danger alert-right'>Error: Could not register.</div>";
@@ -116,7 +110,6 @@ if (isset($_POST['register'])) {
             margin-bottom: 20px;
         }
 
-        /* បង្កើតស្ទីល Input ថ្មី */
         .form-control {
             height: 52px;
             background: #f8f9fa;
@@ -134,7 +127,6 @@ if (isset($_POST['register'])) {
             outline: none;
         }
 
-        /* Floating Label Logic */
         .form-outline label {
             position: absolute;
             top: 50%;
@@ -255,7 +247,6 @@ if (isset($_POST['register'])) {
 
     <script src="static/js/bootstrap.bundle.min.js"></script>
     <script>
-        // បិទ Alert អូតូក្នុងរយៈពេល ៤វិនាទី
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert-right');
             alerts.forEach(alert => {

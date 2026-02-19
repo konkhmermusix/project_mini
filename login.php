@@ -3,14 +3,13 @@ session_start();
 require 'inc/db.php';
 
 $message = '';
-$email = ''; // បង្កើត Variable សម្រាប់រក្សាទុក Email
+$email = '';
 
 if (isset($_POST['login'])) {
 
-    $email = trim($_POST['email']); // ចាប់យក Email ដែលវាយបញ្ចូល
+    $email = trim($_POST['email']);
     $password = $_POST['password'];
 
-    // Fetch user securely
     $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE email=? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -18,27 +17,10 @@ if (isset($_POST['login'])) {
     $stmt->close();
 
     if ($user && password_verify($password, $user['password'])) {
-        // Set session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['username'];
         $_SESSION['role'] = $user['role'];
 
-        // Merge cookie cart into session cart
-        if (isset($_COOKIE['cart'])) {
-            $cookieCart = json_decode($_COOKIE['cart'], true);
-            if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
-
-            foreach ($cookieCart as $pid => $item) {
-                if (isset($_SESSION['cart'][$pid])) {
-                    $_SESSION['cart'][$pid]['qty'] += $item['qty'];
-                } else {
-                    $_SESSION['cart'][$pid] = $item;
-                }
-            }
-            setcookie('cart', json_encode($_SESSION['cart']), time() + (7 * 24 * 60 * 60), "/");
-        }
-
-        // Redirect ជោគជ័យ
         if (isset($_SESSION['redirect_product'])) {
             $pid = $_SESSION['redirect_product'];
             unset($_SESSION['redirect_product']);
@@ -49,7 +31,6 @@ if (isset($_POST['login'])) {
             exit;
         }
     } else {
-        // បើខុស Password ឬ Email បង្ហាញ Message និងរក្សា Email ក្នុង Input
         $message = "
         <div class='alert alert-warning alert-dismissible fade show alert-right' role='alert'>
             <strong>Invalid email or password.</strong>
@@ -114,7 +95,6 @@ if (isset($_POST['login'])) {
             margin-bottom: 20px;
         }
 
-        /* Input Style */
         .form-control {
             height: 52px;
             background: #f8f9fa;
@@ -131,7 +111,6 @@ if (isset($_POST['login'])) {
             outline: none;
         }
 
-        /* Floating Label Logic */
         .form-outline label {
             position: absolute;
             top: 50%;
@@ -152,7 +131,6 @@ if (isset($_POST['login'])) {
             background: white;
         }
 
-        /* Button Style */
         .btn-login {
             height: 52px;
             background: var(--primary-color);
@@ -169,7 +147,6 @@ if (isset($_POST['login'])) {
             box-shadow: 0 5px 15px rgba(78, 115, 223, 0.3);
         }
 
-        /* Alert Styling */
         .alert-right {
             position: fixed;
             top: 25px;

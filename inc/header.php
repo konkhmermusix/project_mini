@@ -58,8 +58,6 @@ if (isset($_SESSION['user_id'])) {
             font-family: 'Kantumruy Pro', sans-serif;
         }
 
-
-        /* Navbar style */
         .navbar-brand {
             font-weight: 600;
             font-size: 1.4rem;
@@ -86,7 +84,6 @@ if (isset($_SESSION['user_id'])) {
             color: #0d6efd !important;
         }
 
-        /* Circle avatar */
         .avatar-circle {
             width: 38px;
             height: 38px;
@@ -98,54 +95,6 @@ if (isset($_SESSION['user_id'])) {
             justify-content: center;
             font-weight: bold;
             font-size: 1rem;
-        }
-
-        .swiper {
-            width: 100%;
-            height: 100%;
-        }
-
-        .swiper-slide {
-            text-align: center;
-            font-size: 18px;
-            background: #444;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .swiper-slide img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .swiper {
-            width: 100%;
-            height: 400px;
-            margin: 0px auto;
-
-        }
-
-        .swiper-slide {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 30px;
-            color: #fff;
-        }
-
-        .slide1 {
-            background: #1abc9c;
-        }
-
-        .slide2 {
-            background: #3498db;
-        }
-
-        .slide3 {
-            background: #9b59b6;
         }
 
         .review-avatar {
@@ -186,223 +135,6 @@ if (isset($_SESSION['user_id'])) {
             min-width: 250px;
         }
 
-        .product-container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .product-card {
-            background: #fff;
-            width: 220px;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .product-card img {
-            width: 100%;
-            height: 180px;
-            object-fit: contain;
-        }
-
-        .discount {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #0d6efd;
-            color: #fff;
-            font-size: 12px;
-            padding: 4px 6px;
-            border-radius: 5px;
-        }
-
-        .product-card h3 {
-            font-size: 14px;
-            margin: 10px 0;
-        }
-
-        .price .new {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .price .old {
-            text-decoration: line-through;
-            color: #999;
-            font-size: 13px;
-            margin-left: 5px;
-        }
-
-        .save {
-            color: green;
-            font-size: 13px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            margin-top: 10px;
-        }
-
-        .product-slider-wrapper {
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .product-slider {
-            display: flex;
-            gap: 16px;
-            scroll-behavior: smooth;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-        .product-slider::-webkit-scrollbar {
-            display: none;
-        }
-
-        .product-slide {
-            min-width: 220px;
-            max-width: 220px;
-            flex-shrink: 0;
-        }
-
-        .product-card {
-            border-radius: 8px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-img-top {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            object-position: center;
-            border-radius: 6px;
-            transition: transform 0.3s;
-        }
-
-        .card-img-top:hover {
-            transform: scale(1.05);
-        }
-
-        @media (max-width: 768px) {
-            .card-img-top {
-                height: 150px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .card-img-top {
-                height: 130px;
-            }
-        }
-
-        .profile-cover {
-            position: relative;
-            height: 280px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
-        }
-
-        .cover-bg {
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .avatar-wrapper {
-            position: absolute;
-            bottom: -60px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 50px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 5px solid #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, .3);
-            margin: auto;
-        }
-
-        .profile-buttons {
-            margin-top: 80px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .profile-buttons .btn {
-            flex: 1 1 45%;
-            padding: 10px 0;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: transform 0.2s;
-        }
-
-        .profile-buttons .btn:hover {
-            transform: translateY(-3px);
-        }
-
-        .table th {
-            width: 160px;
-        }
-
-        .profile-cover {
-            position: relative;
-            height: 260px;
-            border-radius: 14px;
-            overflow: hidden;
-        }
-
-        .cover-bg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .avatar-wrapper {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 48px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 6px solid #fff;
-            box-shadow: 0 8px 18px rgba(0, 0, 0, .3);
-            margin: auto;
-        }
-
         .btn-primary {
             border-radius: 5px;
             padding: 10px;
@@ -438,50 +170,6 @@ if (isset($_SESSION['user_id'])) {
             font-size: 12px;
             color: #0d6efd;
         }
-
-        .review-card {
-            transition: all 0.35s ease;
-            cursor: pointer;
-        }
-
-        .review-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .review-card:hover img {
-            transform: scale(1.1);
-        }
-
-        .review-card img {
-            transition: transform 0.35s ease;
-        }
-
-
-        .product-img-box {
-            width: 100%;
-            height: 200px;
-            /* កម្ពស់ថេរ */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            /* background ស្អាត */
-            overflow: hidden;
-        }
-
-        .product-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            /* ❗ មិនដាច់ក្បាល */
-            transition: transform .3s ease;
-        }
-
-        /* Optional hover zoom */
-        .card:hover .product-img {
-            transform: scale(1.05);
-        }
     </style>
 </head>
 
@@ -489,7 +177,7 @@ if (isset($_SESSION['user_id'])) {
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm p-3 sticky-top">
         <div class="container">
             <a class="navbar-brand" href="index.php">
-                <h3>LSTECH</h3>
+                <h3>Leav Sis</h3>
             </a>
             <button class="navbar-toggler shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -503,23 +191,20 @@ if (isset($_SESSION['user_id'])) {
                         </a>
                     </li>
                     <li class="nav-item me-3">
-                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'shop.php') echo 'active'; ?>" href="shop.php">
+                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == '') echo 'active'; ?>" href="#">
                             Shop
                         </a>
                     </li>
                     <li class="nav-item me-3">
-                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'blog.php') echo 'active'; ?>" href="blog.php">Blog</a>
+                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == '') echo 'active'; ?>" href="#">About</a>
                     </li>
                     <li class="nav-item me-3">
-                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'about.php') echo 'active'; ?>" href="about.php">About</a>
-                    </li>
-                    <li class="nav-item me-3">
-                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'contact.php') echo 'active'; ?>" href="contact.php">Contact</a>
+                        <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == '') echo 'active'; ?>" href="#">Contact</a>
                     </li>
                 </ul>
                 <div class="d-flex list-unstyled">
                     <li class="nav-item me-2">
-                        <form action="search.php" method="GET" class="input-group">
+                        <form action="" method="GET" class="input-group">
                             <input type="text" name="q" class="form-control border-dark" placeholder="Search products" required>
                             <button class="btn btn-outline-dark border-dark" type="submit">
                                 <i class="bi bi-search"></i>
@@ -528,10 +213,10 @@ if (isset($_SESSION['user_id'])) {
                     </li>
 
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-dark btn-nav position-relative" href="cart.php" id="cartLink">
+                        <a class="btn btn-outline-dark btn-nav position-relative" href="#" id="cartLink">
                             <i class="bi bi-cart"></i>
                             <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                <?= isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'qty')) : 0 ?>
+                                2
                             </span>
                         </a>
                     </li>
@@ -542,8 +227,8 @@ if (isset($_SESSION['user_id'])) {
                                 <?= $firstLetter  ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
-                                <li><a class="dropdown-item" href="profile.php">Profile</a></li>
-                                <li><a class="dropdown-item" href="my_orders.php">My Orders</a></li>
+                                <li><a class="dropdown-item" href="#">Profile</a></li>
+                                <li><a class="dropdown-item" href="#">My Orders</a></li>
                                 <?php if ($role == 'admin'): ?>
                                     <li><a class="dropdown-item" href="dashboard/dashboard.php">Dashboard</a></li>
                                 <?php endif; ?>
